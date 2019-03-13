@@ -14,4 +14,8 @@ public interface DeliveryAddrService {
      * @return  用户的默认收货信息
      */
     DeliveryAddr getDefaultDeliveryAddr(Long userId);
+
+    //新增收货人信息
+
+    //更新收货人信息
 }

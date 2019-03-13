@@ -12,4 +12,13 @@ public interface UserService {
      * @return 用户积分分值
      */
     int  getAvaliableMembershipPoint(Long userId);
+
+    //冻结用户积分
+    boolean frozenMembershipPoint(Long userId,int point);
+
+    //扣减冻结用户积分
+    boolean deductMembershipPoint(Long userId,int point);
+
+    //增加积分
+    boolean addMembershipPoint(Long userId,int point);
 }

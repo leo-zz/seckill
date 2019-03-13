@@ -18,9 +18,14 @@ public interface CouponService {
      */
     List<Coupon>  getAvaliableCouponList(Long secActivityId,Long userId);
 
-    //使用优惠券
-
     //领取优惠券
 
+    //定时任务：优惠券自动过期
+
+    //冻结优惠券
+    boolean frozenCoupon(Long couponId,Long orderId);
+
+    //使用优惠券，先冻结后使用
+    boolean useCoupon(Long couponId,Long orderId);
 
 }
