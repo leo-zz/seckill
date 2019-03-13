@@ -2,7 +2,7 @@ package com.leozz.entity;
 
 import java.util.Date;
 
-public class ScoreRecord {
+public class PointRecord {
     private Long id;
 
     private Byte type;
