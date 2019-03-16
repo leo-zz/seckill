@@ -6,8 +6,8 @@ package com.leozz.dto;
  */
 public class ResultDTO {
 
-    boolean result;
-    String msg;
+    private boolean result;
+    private String msg;
 
     public ResultDTO(boolean result, String msg) {
         this.result = result;
