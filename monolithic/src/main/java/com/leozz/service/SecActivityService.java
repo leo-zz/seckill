@@ -1,6 +1,6 @@
 package com.leozz.service;
 
-import com.leozz.dto.SecActivityListPage;
+import com.leozz.dto.ResultDTO;
 import com.leozz.dto.SecActivityDTO;
 import com.leozz.entity.SecActivity;
 
@@ -32,10 +32,10 @@ public interface SecActivityService {
      *  在此处使用漏桶算法进行限流，比如100件商品只允许1000人进入下单页面。
      * @param secActivityId 活动编号的id
      * @param userId 用户id
-     * @return 如果并发请求数超过限流阈值，或者活动结束，或者库存不足，则返回false，
+     * @return 结果使用ResultDTO类封装。如果并发请求数超过限流阈值，或者活动结束，或者库存不足，则返回false，
      *  否则返回true，表示可以进入订单创建环节。
      */
-    boolean partakeSecActivity(Long secActivityId, Long userId);
+    ResultDTO partakeSecActivity(Long secActivityId, Long userId);
 
     /**
      * 根据活动编号的id，查询秒杀活动的状态和库存,一次秒杀活动中，同一个用户只能参与一次{@link SecOrderService#hasUserPlacedOrder(java.lang.Long, java.lang.Long)}
