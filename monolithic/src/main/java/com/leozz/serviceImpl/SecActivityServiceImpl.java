@@ -1,20 +1,19 @@
 package com.leozz.serviceImpl;
 
-import com.leozz.dao.GoodsMapper;
-import com.leozz.dao.SecActivityMapper;
 import com.leozz.dto.ResultDTO;
-import com.leozz.dto.SecActivityListPage;
 import com.leozz.dto.SecActivityDTO;
 import com.leozz.entity.Goods;
 import com.leozz.entity.SecActivity;
 import com.leozz.service.SecActivityService;
 import com.leozz.service.SecOrderService;
+import com.leozz.util.FlowLimiter;
+import com.leozz.util.cache.ActivitiesLocalCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 
 /**
  * @Author: leo-zz
@@ -24,11 +23,12 @@ import java.util.List;
 public class SecActivityServiceImpl implements SecActivityService {
 
 
-    @Autowired
-    SecActivityMapper secActivityMapper;
 
     @Autowired
-    GoodsMapper goodsMapper;
+    FlowLimiter flowLimiter;
+
+    @Autowired
+    ActivitiesLocalCache activitiesLocalCache;
 
     @Autowired
     SecOrderService secOrderService;
@@ -41,16 +41,17 @@ public class SecActivityServiceImpl implements SecActivityService {
     @Override
     public List<SecActivityDTO> getSecActivityList(Long userId) {
         //查询开始前后1小时，且状态为1,2,3的秒杀活动
-        //TODO 使用缓存提升速度，需要有定时任务更新秒杀活动的状态
-        List<SecActivity> secActivityList = secActivityMapper.selectRecentActivityList();
+        //TODO 使用缓存提升速度，使用定时任务更新秒杀活动的状态？
+        List<SecActivity> secActivityList = activitiesLocalCache.getActivityList();
         List<SecActivityDTO> secActivityDTOS = new ArrayList<>(secActivityList.size());
 
         //遍历所有秒杀活动
         for (SecActivity secActivity : secActivityList) {
             SecActivityDTO secActivityDTO = new SecActivityDTO();
+            Long id = secActivity.getId();
 
             //获取活动商品的信息
-            Goods goods = goodsMapper.selectByPrimaryKey(secActivity.getId());
+            Goods goods = activitiesLocalCache.getGoodsByActivityId(id);
             secActivityDTO.setGoodsImg(goods.getGoodsImg());
             secActivityDTO.setGoodsPrice(goods.getGoodsPrice().doubleValue());
             secActivityDTO.setGoodsTitle(goods.getGoodsTitle());
@@ -58,7 +59,7 @@ public class SecActivityServiceImpl implements SecActivityService {
             secActivityDTO.setStockPercent(secActivity.getStockPercent());
 
             //一次秒杀活动中，同一个用户只能参与一次。
-            boolean b = secOrderService.hasUserPlacedOrder(secActivity.getId(), userId);
+            boolean b = secOrderService.hasUserPlacedOrder(id, userId);
             if (b) {
                 //如果用户已参与过，则给活动增加已参与标签。
                 secActivityDTO.setButtonContent("已参与");
@@ -90,46 +91,49 @@ public class SecActivityServiceImpl implements SecActivityService {
 
     @Override
     public ResultDTO partakeSecActivity(Long secActivityId, Long userId) {
-        SecActivity secActivity = secActivityMapper.selectByPrimaryKey(secActivityId);
-
-        // 当前用户是否参与过此活动
-
-        // 使用漏桶算法进行限流，比如100件商品只允许1000人进入下单页面
-
-
-
-
-        // 重新检查秒杀活动的状态
-        //TODO 活动的状态如何能及时更新？定时任务？
-//        Date endDate = secActivity.getEndDate();
-//
-        //TODO 如何处理并发问题？
-        switch (secActivity.getStatus()) {
-            case 1:
-                //检测活动是否已经开始
-                if(System.currentTimeMillis() > secActivity.getStartDate().getTime()){
-                    secActivityMapper.updateStatus(2);
-                }
-                return new ResultDTO(false,"未开始");
-            case 2:
-                // 检查库存是否充足
-                // TODO 此处不用增加措施防止超卖？加锁？原子性？
-                Integer stockCount = secActivity.getStockCount();
-                Integer blockedStockCount=secActivity.getBlockedStockCount();
-                if(stockCount>blockedStockCount){
-                    return new ResultDTO(true);
-                }else{
-                    return new ResultDTO(false,"已抢完");
-                }
-            case 3:
-                return new ResultDTO(false,"已抢完");
-            default:
-                return new ResultDTO(false,"已结束");
+        SecActivity secActivity = activitiesLocalCache.getSecActivityById(secActivityId);
+        // 当前用户是否参与过此活动，一次秒杀活动中，同一个用户只能参与一次。
+        boolean b = secOrderService.hasUserPlacedOrder(secActivity.getId(), userId);
+        if (b) {
+            //如果用户已参与过，则给活动增加已参与标签。
+            return new ResultDTO(false,"一位用户只能参与一次。");
         }
+        // 使用漏桶算法进行限流，允许秒杀商品梳理3倍的人数参与抢购，比如100件商品最多允许300人进入下单页面
+        Integer seckillCount = secActivity.getSeckillCount();
+        Semaphore limiter = flowLimiter.getLimiter(secActivityId, seckillCount);
+        try {
+            limiter.acquire();
+            // 重新检查秒杀活动的状态
+            //TODO 活动的状态如何能及时更新？定时任务？
+            //TODO 如何处理并发问题？
+            switch (secActivity.getStatus()) {
+                case 1:
+                    //检测活动是否已经开始，确保时间到达后，第一个请求进入时更新活动状态，后续请求不再重新更新状态，
+                    // 且确保第一个请求能够公平地进行后续请求。
+                    if(System.currentTimeMillis() > secActivity.getStartDate().getTime()){
 
-
-
-        return false;
+                        activitiesLocalCache.updateStatusById(secActivityId,(byte)2);
+                    }
+                    return new ResultDTO(false,"未开始");
+                case 2:
+                    // 检查库存是否充足
+                    // TODO 此处不用增加措施防止超卖？加锁？原子性？
+                    Integer stockCount = secActivity.getStockCount();
+                    Integer blockedStockCount=secActivity.getBlockedStockCount();
+                    if(stockCount>blockedStockCount){
+                        return new ResultDTO(true);
+                    }else{
+                        return new ResultDTO(false,"已抢完");
+                    }
+                case 3:
+                    return new ResultDTO(false,"已抢完");
+                default:
+                    return new ResultDTO(false,"已结束");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return new ResultDTO(false,"活动太火爆，请稍后重试");
+        }
     }
 
     @Override
