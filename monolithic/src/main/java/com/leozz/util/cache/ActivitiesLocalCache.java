@@ -145,4 +145,8 @@ public class ActivitiesLocalCache {
     public Goods getGoodsByActivityId(Long id) {
         return goodsMap.get(id);
     }
+
+    //加锁
+    public void updateById(Long activityId) {
+    }
 }
