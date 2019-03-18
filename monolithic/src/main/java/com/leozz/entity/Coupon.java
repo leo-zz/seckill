@@ -7,9 +7,11 @@ public class Coupon {
 
     private Byte type;
 
-    private BigDecimal discountLimit;
+    private String couponName;
 
-    private BigDecimal discountAmount;
+    private BigDecimal usageLimit;
+
+    private BigDecimal couponValue;
 
     public Long getId() {
         return id;
@@ -27,19 +29,27 @@ public class Coupon {
         this.type = type;
     }
 
-    public BigDecimal getDiscountLimit() {
-        return discountLimit;
+    public String getCouponName() {
+        return couponName;
     }
 
-    public void setDiscountLimit(BigDecimal discountLimit) {
-        this.discountLimit = discountLimit;
+    public void setCouponName(String couponName) {
+        this.couponName = couponName == null ? null : couponName.trim();
     }
 
-    public BigDecimal getDiscountAmount() {
-        return discountAmount;
+    public BigDecimal getUsageLimit() {
+        return usageLimit;
     }
 
-    public void setDiscountAmount(BigDecimal discountAmount) {
-        this.discountAmount = discountAmount;
+    public void setUsageLimit(BigDecimal usageLimit) {
+        this.usageLimit = usageLimit;
+    }
+
+    public BigDecimal getCouponValue() {
+        return couponValue;
+    }
+
+    public void setCouponValue(BigDecimal couponValue) {
+        this.couponValue = couponValue;
     }
 }

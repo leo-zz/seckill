@@ -17,8 +17,6 @@ public class Goods {
 
     private Integer blockedStock;
 
-    private String goodsDetail;
-
     public Long getId() {
         return id;
     }
@@ -73,13 +71,5 @@ public class Goods {
 
     public void setBlockedStock(Integer blockedStock) {
         this.blockedStock = blockedStock;
-    }
-
-    public String getGoodsDetail() {
-        return goodsDetail;
-    }
-
-    public void setGoodsDetail(String goodsDetail) {
-        this.goodsDetail = goodsDetail == null ? null : goodsDetail.trim();
     }
 }

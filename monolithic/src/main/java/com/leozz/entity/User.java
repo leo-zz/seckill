@@ -13,7 +13,9 @@ public class User {
 
     private String head;
 
-    private Integer membershipScore;
+    private Integer membershipPoint;
+
+    private Integer blockedMembershipPoint;
 
     private Date registerDate;
 
@@ -61,12 +63,20 @@ public class User {
         this.head = head == null ? null : head.trim();
     }
 
-    public Integer getMembershipScore() {
-        return membershipScore;
+    public Integer getMembershipPoint() {
+        return membershipPoint;
     }
 
-    public void setMembershipScore(Integer membershipScore) {
-        this.membershipScore = membershipScore;
+    public void setMembershipPoint(Integer membershipPoint) {
+        this.membershipPoint = membershipPoint;
+    }
+
+    public Integer getBlockedMembershipPoint() {
+        return blockedMembershipPoint;
+    }
+
+    public void setBlockedMembershipPoint(Integer blockedMembershipPoint) {
+        this.blockedMembershipPoint = blockedMembershipPoint;
     }
 
     public Date getRegisterDate() {

@@ -9,7 +9,7 @@ public class UserCouponRecord {
 
     private Long userId;
 
-    private Boolean isUsed;
+    private Byte status;
 
     private Long orderId;
 
@@ -41,12 +41,12 @@ public class UserCouponRecord {
         this.userId = userId;
     }
 
-    public Boolean getIsUsed() {
-        return isUsed;
+    public Byte getStatus() {
+        return status;
     }
 
-    public void setIsUsed(Boolean isUsed) {
-        this.isUsed = isUsed;
+    public void setStatus(Byte status) {
+        this.status = status;
     }
 
     public Long getOrderId() {

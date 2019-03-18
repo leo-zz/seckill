@@ -2,10 +2,12 @@ package com.leozz.entity;
 
 import java.util.Date;
 
-public class PointRecord {
+public class ScoreRecord {
     private Long id;
 
-    private Byte type;
+    private Long orderId;
+
+    private Byte cause;
 
     private Integer updateAmount;
 
@@ -19,12 +21,20 @@ public class PointRecord {
         this.id = id;
     }
 
-    public Byte getType() {
-        return type;
+    public Long getOrderId() {
+        return orderId;
     }
 
-    public void setType(Byte type) {
-        this.type = type;
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public Byte getCause() {
+        return cause;
+    }
+
+    public void setCause(Byte cause) {
+        this.cause = cause;
     }
 
     public Integer getUpdateAmount() {

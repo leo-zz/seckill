@@ -10,7 +10,13 @@ public class SecActivity {
 
     private BigDecimal seckillPrice;
 
-    private Integer stockCount;
+    private Integer stockPercent;
+
+    private Integer seckillCount;
+
+    private Integer seckillStock;
+
+    private Integer seckillBlockedStock;
 
     private Date startDate;
 
@@ -42,12 +48,36 @@ public class SecActivity {
         this.seckillPrice = seckillPrice;
     }
 
-    public Integer getStockCount() {
-        return stockCount;
+    public Integer getStockPercent() {
+        return stockPercent;
     }
 
-    public void setStockCount(Integer stockCount) {
-        this.stockCount = stockCount;
+    public void setStockPercent(Integer stockPercent) {
+        this.stockPercent = stockPercent;
+    }
+
+    public Integer getSeckillCount() {
+        return seckillCount;
+    }
+
+    public void setSeckillCount(Integer seckillCount) {
+        this.seckillCount = seckillCount;
+    }
+
+    public Integer getSeckillStock() {
+        return seckillStock;
+    }
+
+    public void setSeckillStock(Integer seckillStock) {
+        this.seckillStock = seckillStock;
+    }
+
+    public Integer getSeckillBlockedStock() {
+        return seckillBlockedStock;
+    }
+
+    public void setSeckillBlockedStock(Integer seckillBlockedStock) {
+        this.seckillBlockedStock = seckillBlockedStock;
     }
 
     public Date getStartDate() {

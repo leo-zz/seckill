@@ -1,5 +1,6 @@
 package com.leozz.entity;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 public class SecOrder {
@@ -7,11 +8,11 @@ public class SecOrder {
 
     private Long userId;
 
-    private Long orderId;
-
     private Long activityId;
 
     private Long deliveryAddrId;
+
+    private BigDecimal amount;
 
     private Byte orderChannel;
 
@@ -20,6 +21,10 @@ public class SecOrder {
     private Date createDate;
 
     private Date payDate;
+
+    private Boolean couponUsage;
+
+    private Boolean pointUsage;
 
     public Long getId() {
         return id;
@@ -37,14 +42,6 @@ public class SecOrder {
         this.userId = userId;
     }
 
-    public Long getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(Long orderId) {
-        this.orderId = orderId;
-    }
-
     public Long getActivityId() {
         return activityId;
     }
@@ -59,6 +56,14 @@ public class SecOrder {
 
     public void setDeliveryAddrId(Long deliveryAddrId) {
         this.deliveryAddrId = deliveryAddrId;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 
     public Byte getOrderChannel() {
@@ -91,5 +96,21 @@ public class SecOrder {
 
     public void setPayDate(Date payDate) {
         this.payDate = payDate;
+    }
+
+    public Boolean getCouponUsage() {
+        return couponUsage;
+    }
+
+    public void setCouponUsage(Boolean couponUsage) {
+        this.couponUsage = couponUsage;
+    }
+
+    public Boolean getPointUsage() {
+        return pointUsage;
+    }
+
+    public void setPointUsage(Boolean pointUsage) {
+        this.pointUsage = pointUsage;
     }
 }
