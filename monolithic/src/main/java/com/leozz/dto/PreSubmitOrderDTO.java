@@ -1,6 +1,7 @@
 package com.leozz.dto;
 
 import com.leozz.entity.Coupon;
+import com.leozz.entity.DeliveryAddr;
 
 /**
  * @Author: leo-zz
@@ -16,11 +17,7 @@ public class PreSubmitOrderDTO {
     private int stockPercent;   //库存百分比
 
     //收件人信息
-    private String recipientName;
-
-    private String recipientTel;
-
-    private String recipientAddr;
+    private DeliveryAddr deliveryAddr;
 
     //优惠券信息
     private Coupon fullrangeCoupon;//全品类券
@@ -28,6 +25,7 @@ public class PreSubmitOrderDTO {
 
     //积分信息
     private int point;
+
 
     public PreSubmitOrderDTO() {
     }
@@ -69,28 +67,12 @@ public class PreSubmitOrderDTO {
         this.stockPercent = stockPercent;
     }
 
-    public String getRecipientName() {
-        return recipientName;
+    public DeliveryAddr getDeliveryAddr() {
+        return deliveryAddr;
     }
 
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
-    }
-
-    public String getRecipientTel() {
-        return recipientTel;
-    }
-
-    public void setRecipientTel(String recipientTel) {
-        this.recipientTel = recipientTel;
-    }
-
-    public String getRecipientAddr() {
-        return recipientAddr;
-    }
-
-    public void setRecipientAddr(String recipientAddr) {
-        this.recipientAddr = recipientAddr;
+    public void setDeliveryAddr(DeliveryAddr deliveryAddr) {
+        this.deliveryAddr = deliveryAddr;
     }
 
     public Coupon getFullrangeCoupon() {
