@@ -4,17 +4,19 @@
   <resultMap id="BaseResultMap" type="com.leozz.entity.SecOrder" >
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="user_id" property="userId" jdbcType="BIGINT" />
-    <result column="order_id" property="orderId" jdbcType="BIGINT" />
     <result column="activity_id" property="activityId" jdbcType="BIGINT" />
     <result column="delivery_addr_id" property="deliveryAddrId" jdbcType="BIGINT" />
+    <result column="amount" property="amount" jdbcType="DECIMAL" />
     <result column="order_channel" property="orderChannel" jdbcType="TINYINT" />
     <result column="status" property="status" jdbcType="TINYINT" />
     <result column="create_date" property="createDate" jdbcType="TIMESTAMP" />
     <result column="pay_date" property="payDate" jdbcType="TIMESTAMP" />
+    <result column="coupon_usage" property="couponUsage" jdbcType="BIT" />
+    <result column="point_usage" property="pointUsage" jdbcType="BIT" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, user_id, order_id, activity_id, delivery_addr_id, order_channel, status, create_date, 
-    pay_date
+    id, user_id, activity_id, delivery_addr_id, amount, order_channel, status, create_date, 
+    pay_date, coupon_usage, point_usage
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -27,14 +29,14 @@
     where id = #{id,jdbcType=BIGINT}
   </delete>
   <insert id="insert" parameterType="com.leozz.entity.SecOrder" >
-    insert into seckill_order (id, user_id, order_id, 
-      activity_id, delivery_addr_id, order_channel, 
-      status, create_date, pay_date
-      )
-    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{orderId,jdbcType=BIGINT}, 
-      #{activityId,jdbcType=BIGINT}, #{deliveryAddrId,jdbcType=BIGINT}, #{orderChannel,jdbcType=TINYINT}, 
-      #{status,jdbcType=TINYINT}, #{createDate,jdbcType=TIMESTAMP}, #{payDate,jdbcType=TIMESTAMP}
-      )
+    insert into seckill_order (id, user_id, activity_id, 
+      delivery_addr_id, amount, order_channel, 
+      status, create_date, pay_date, 
+      coupon_usage, point_usage)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{activityId,jdbcType=BIGINT}, 
+      #{deliveryAddrId,jdbcType=BIGINT}, #{amount,jdbcType=DECIMAL}, #{orderChannel,jdbcType=TINYINT}, 
+      #{status,jdbcType=TINYINT}, #{createDate,jdbcType=TIMESTAMP}, #{payDate,jdbcType=TIMESTAMP}, 
+      #{couponUsage,jdbcType=BIT}, #{pointUsage,jdbcType=BIT})
   </insert>
   <insert id="insertSelective" parameterType="com.leozz.entity.SecOrder" >
     insert into seckill_order
@@ -45,14 +47,14 @@
       <if test="userId != null" >
         user_id,
       </if>
-      <if test="orderId != null" >
-        order_id,
-      </if>
       <if test="activityId != null" >
         activity_id,
       </if>
       <if test="deliveryAddrId != null" >
         delivery_addr_id,
+      </if>
+      <if test="amount != null" >
+        amount,
       </if>
       <if test="orderChannel != null" >
         order_channel,
@@ -66,6 +68,12 @@
       <if test="payDate != null" >
         pay_date,
       </if>
+      <if test="couponUsage != null" >
+        coupon_usage,
+      </if>
+      <if test="pointUsage != null" >
+        point_usage,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -74,14 +82,14 @@
       <if test="userId != null" >
         #{userId,jdbcType=BIGINT},
       </if>
-      <if test="orderId != null" >
-        #{orderId,jdbcType=BIGINT},
-      </if>
       <if test="activityId != null" >
         #{activityId,jdbcType=BIGINT},
       </if>
       <if test="deliveryAddrId != null" >
         #{deliveryAddrId,jdbcType=BIGINT},
+      </if>
+      <if test="amount != null" >
+        #{amount,jdbcType=DECIMAL},
       </if>
       <if test="orderChannel != null" >
         #{orderChannel,jdbcType=TINYINT},
@@ -95,6 +103,12 @@
       <if test="payDate != null" >
         #{payDate,jdbcType=TIMESTAMP},
       </if>
+      <if test="couponUsage != null" >
+        #{couponUsage,jdbcType=BIT},
+      </if>
+      <if test="pointUsage != null" >
+        #{pointUsage,jdbcType=BIT},
+      </if>
     </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.SecOrder" >
@@ -103,14 +117,14 @@
       <if test="userId != null" >
         user_id = #{userId,jdbcType=BIGINT},
       </if>
-      <if test="orderId != null" >
-        order_id = #{orderId,jdbcType=BIGINT},
-      </if>
       <if test="activityId != null" >
         activity_id = #{activityId,jdbcType=BIGINT},
       </if>
       <if test="deliveryAddrId != null" >
         delivery_addr_id = #{deliveryAddrId,jdbcType=BIGINT},
+      </if>
+      <if test="amount != null" >
+        amount = #{amount,jdbcType=DECIMAL},
       </if>
       <if test="orderChannel != null" >
         order_channel = #{orderChannel,jdbcType=TINYINT},
@@ -124,19 +138,27 @@
       <if test="payDate != null" >
         pay_date = #{payDate,jdbcType=TIMESTAMP},
       </if>
+      <if test="couponUsage != null" >
+        coupon_usage = #{couponUsage,jdbcType=BIT},
+      </if>
+      <if test="pointUsage != null" >
+        point_usage = #{pointUsage,jdbcType=BIT},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.leozz.entity.SecOrder" >
     update seckill_order
     set user_id = #{userId,jdbcType=BIGINT},
-      order_id = #{orderId,jdbcType=BIGINT},
       activity_id = #{activityId,jdbcType=BIGINT},
       delivery_addr_id = #{deliveryAddrId,jdbcType=BIGINT},
+      amount = #{amount,jdbcType=DECIMAL},
       order_channel = #{orderChannel,jdbcType=TINYINT},
       status = #{status,jdbcType=TINYINT},
       create_date = #{createDate,jdbcType=TIMESTAMP},
-      pay_date = #{payDate,jdbcType=TIMESTAMP}
+      pay_date = #{payDate,jdbcType=TIMESTAMP},
+      coupon_usage = #{couponUsage,jdbcType=BIT},
+      point_usage = #{pointUsage,jdbcType=BIT}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

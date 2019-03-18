@@ -5,13 +5,13 @@
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="coupon_id" property="couponId" jdbcType="BIGINT" />
     <result column="user_id" property="userId" jdbcType="BIGINT" />
-    <result column="is_used" property="isUsed" jdbcType="BIT" />
+    <result column="status" property="status" jdbcType="TINYINT" />
     <result column="order_id" property="orderId" jdbcType="BIGINT" />
     <result column="usage_date" property="usageDate" jdbcType="TIMESTAMP" />
     <result column="pick_date" property="pickDate" jdbcType="TIMESTAMP" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, coupon_id, user_id, is_used, order_id, usage_date, pick_date
+    id, coupon_id, user_id, status, order_id, usage_date, pick_date
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -25,10 +25,10 @@
   </delete>
   <insert id="insert" parameterType="com.leozz.entity.UserCouponRecord" >
     insert into user_coupon_record (id, coupon_id, user_id, 
-      is_used, order_id, usage_date, 
+      status, order_id, usage_date, 
       pick_date)
     values (#{id,jdbcType=BIGINT}, #{couponId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, 
-      #{isUsed,jdbcType=BIT}, #{orderId,jdbcType=BIGINT}, #{usageDate,jdbcType=TIMESTAMP}, 
+      #{status,jdbcType=TINYINT}, #{orderId,jdbcType=BIGINT}, #{usageDate,jdbcType=TIMESTAMP}, 
       #{pickDate,jdbcType=TIMESTAMP})
   </insert>
   <insert id="insertSelective" parameterType="com.leozz.entity.UserCouponRecord" >
@@ -43,8 +43,8 @@
       <if test="userId != null" >
         user_id,
       </if>
-      <if test="isUsed != null" >
-        is_used,
+      <if test="status != null" >
+        status,
       </if>
       <if test="orderId != null" >
         order_id,
@@ -66,8 +66,8 @@
       <if test="userId != null" >
         #{userId,jdbcType=BIGINT},
       </if>
-      <if test="isUsed != null" >
-        #{isUsed,jdbcType=BIT},
+      <if test="status != null" >
+        #{status,jdbcType=TINYINT},
       </if>
       <if test="orderId != null" >
         #{orderId,jdbcType=BIGINT},
@@ -89,8 +89,8 @@
       <if test="userId != null" >
         user_id = #{userId,jdbcType=BIGINT},
       </if>
-      <if test="isUsed != null" >
-        is_used = #{isUsed,jdbcType=BIT},
+      <if test="status != null" >
+        status = #{status,jdbcType=TINYINT},
       </if>
       <if test="orderId != null" >
         order_id = #{orderId,jdbcType=BIGINT},
@@ -108,7 +108,7 @@
     update user_coupon_record
     set coupon_id = #{couponId,jdbcType=BIGINT},
       user_id = #{userId,jdbcType=BIGINT},
-      is_used = #{isUsed,jdbcType=BIT},
+      status = #{status,jdbcType=TINYINT},
       order_id = #{orderId,jdbcType=BIGINT},
       usage_date = #{usageDate,jdbcType=TIMESTAMP},
       pick_date = #{pickDate,jdbcType=TIMESTAMP}

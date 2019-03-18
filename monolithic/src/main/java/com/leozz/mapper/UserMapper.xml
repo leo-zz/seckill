@@ -7,14 +7,15 @@
     <result column="password" property="password" jdbcType="VARCHAR" />
     <result column="salt" property="salt" jdbcType="VARCHAR" />
     <result column="head" property="head" jdbcType="VARCHAR" />
-    <result column="membership_score" property="membershipScore" jdbcType="INTEGER" />
+    <result column="membership_point" property="membershipPoint" jdbcType="INTEGER" />
+    <result column="blocked_membership_point" property="blockedMembershipPoint" jdbcType="INTEGER" />
     <result column="register_date" property="registerDate" jdbcType="TIMESTAMP" />
     <result column="last_login_date" property="lastLoginDate" jdbcType="TIMESTAMP" />
     <result column="login_count" property="loginCount" jdbcType="INTEGER" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, nickname, password, salt, head, membership_score, register_date, last_login_date, 
-    login_count
+    id, nickname, password, salt, head, membership_point, blocked_membership_point, register_date, 
+    last_login_date, login_count
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -28,13 +29,13 @@
   </delete>
   <insert id="insert" parameterType="com.leozz.entity.User" >
     insert into user (id, nickname, password, 
-      salt, head, membership_score, 
-      register_date, last_login_date, login_count
-      )
+      salt, head, membership_point, 
+      blocked_membership_point, register_date, 
+      last_login_date, login_count)
     values (#{id,jdbcType=BIGINT}, #{nickname,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, 
-      #{salt,jdbcType=VARCHAR}, #{head,jdbcType=VARCHAR}, #{membershipScore,jdbcType=INTEGER}, 
-      #{registerDate,jdbcType=TIMESTAMP}, #{lastLoginDate,jdbcType=TIMESTAMP}, #{loginCount,jdbcType=INTEGER}
-      )
+      #{salt,jdbcType=VARCHAR}, #{head,jdbcType=VARCHAR}, #{membershipPoint,jdbcType=INTEGER}, 
+      #{blockedMembershipPoint,jdbcType=INTEGER}, #{registerDate,jdbcType=TIMESTAMP}, 
+      #{lastLoginDate,jdbcType=TIMESTAMP}, #{loginCount,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.leozz.entity.User" >
     insert into user
@@ -54,8 +55,11 @@
       <if test="head != null" >
         head,
       </if>
-      <if test="membershipScore != null" >
-        membership_score,
+      <if test="membershipPoint != null" >
+        membership_point,
+      </if>
+      <if test="blockedMembershipPoint != null" >
+        blocked_membership_point,
       </if>
       <if test="registerDate != null" >
         register_date,
@@ -83,8 +87,11 @@
       <if test="head != null" >
         #{head,jdbcType=VARCHAR},
       </if>
-      <if test="membershipScore != null" >
-        #{membershipScore,jdbcType=INTEGER},
+      <if test="membershipPoint != null" >
+        #{membershipPoint,jdbcType=INTEGER},
+      </if>
+      <if test="blockedMembershipPoint != null" >
+        #{blockedMembershipPoint,jdbcType=INTEGER},
       </if>
       <if test="registerDate != null" >
         #{registerDate,jdbcType=TIMESTAMP},
@@ -112,8 +119,11 @@
       <if test="head != null" >
         head = #{head,jdbcType=VARCHAR},
       </if>
-      <if test="membershipScore != null" >
-        membership_score = #{membershipScore,jdbcType=INTEGER},
+      <if test="membershipPoint != null" >
+        membership_point = #{membershipPoint,jdbcType=INTEGER},
+      </if>
+      <if test="blockedMembershipPoint != null" >
+        blocked_membership_point = #{blockedMembershipPoint,jdbcType=INTEGER},
       </if>
       <if test="registerDate != null" >
         register_date = #{registerDate,jdbcType=TIMESTAMP},
@@ -133,7 +143,8 @@
       password = #{password,jdbcType=VARCHAR},
       salt = #{salt,jdbcType=VARCHAR},
       head = #{head,jdbcType=VARCHAR},
-      membership_score = #{membershipScore,jdbcType=INTEGER},
+      membership_point = #{membershipPoint,jdbcType=INTEGER},
+      blocked_membership_point = #{blockedMembershipPoint,jdbcType=INTEGER},
       register_date = #{registerDate,jdbcType=TIMESTAMP},
       last_login_date = #{lastLoginDate,jdbcType=TIMESTAMP},
       login_count = #{loginCount,jdbcType=INTEGER}

@@ -1,39 +1,43 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.leozz.dao.PointRecordMapper" >
-  <resultMap id="BaseResultMap" type="com.leozz.entity.PointRecord" >
+<mapper namespace="com.leozz.dao.ScoreRecordMapper" >
+  <resultMap id="BaseResultMap" type="com.leozz.entity.ScoreRecord" >
     <id column="id" property="id" jdbcType="BIGINT" />
-    <result column="type" property="type" jdbcType="TINYINT" />
+    <result column="order_id" property="orderId" jdbcType="BIGINT" />
+    <result column="cause" property="cause" jdbcType="TINYINT" />
     <result column="update_amount" property="updateAmount" jdbcType="DECIMAL" />
     <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, type, update_amount, update_date
+    id, order_id, cause, update_amount, update_date
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
     <include refid="Base_Column_List" />
-    from score_record
+    from point_record
     where id = #{id,jdbcType=BIGINT}
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
-    delete from score_record
+    delete from point_record
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="com.leozz.entity.PointRecord" >
-    insert into score_record (id, type, update_amount, 
-      update_date)
-    values (#{id,jdbcType=BIGINT}, #{type,jdbcType=TINYINT}, #{updateAmount,jdbcType=DECIMAL}, 
-      #{updateDate,jdbcType=TIMESTAMP})
+  <insert id="insert" parameterType="com.leozz.entity.ScoreRecord" >
+    insert into point_record (id, order_id, cause, 
+      update_amount, update_date)
+    values (#{id,jdbcType=BIGINT}, #{orderId,jdbcType=BIGINT}, #{cause,jdbcType=TINYINT}, 
+      #{updateAmount,jdbcType=DECIMAL}, #{updateDate,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="com.leozz.entity.PointRecord" >
-    insert into score_record
+  <insert id="insertSelective" parameterType="com.leozz.entity.ScoreRecord" >
+    insert into point_record
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
         id,
       </if>
-      <if test="type != null" >
-        type,
+      <if test="orderId != null" >
+        order_id,
+      </if>
+      <if test="cause != null" >
+        cause,
       </if>
       <if test="updateAmount != null" >
         update_amount,
@@ -46,8 +50,11 @@
       <if test="id != null" >
         #{id,jdbcType=BIGINT},
       </if>
-      <if test="type != null" >
-        #{type,jdbcType=TINYINT},
+      <if test="orderId != null" >
+        #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="cause != null" >
+        #{cause,jdbcType=TINYINT},
       </if>
       <if test="updateAmount != null" >
         #{updateAmount,jdbcType=DECIMAL},
@@ -57,11 +64,14 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.PointRecord" >
-    update score_record
+  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.ScoreRecord" >
+    update point_record
     <set >
-      <if test="type != null" >
-        type = #{type,jdbcType=TINYINT},
+      <if test="orderId != null" >
+        order_id = #{orderId,jdbcType=BIGINT},
+      </if>
+      <if test="cause != null" >
+        cause = #{cause,jdbcType=TINYINT},
       </if>
       <if test="updateAmount != null" >
         update_amount = #{updateAmount,jdbcType=DECIMAL},
@@ -72,9 +82,10 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.PointRecord" >
-    update score_record
-    set type = #{type,jdbcType=TINYINT},
+  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.ScoreRecord" >
+    update point_record
+    set order_id = #{orderId,jdbcType=BIGINT},
+      cause = #{cause,jdbcType=TINYINT},
       update_amount = #{updateAmount,jdbcType=DECIMAL},
       update_date = #{updateDate,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}

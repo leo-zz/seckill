@@ -5,13 +5,17 @@
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="goods_id" property="goodsId" jdbcType="BIGINT" />
     <result column="seckill_price" property="seckillPrice" jdbcType="DECIMAL" />
-    <result column="stock_count" property="stockCount" jdbcType="INTEGER" />
+    <result column="stock_percent" property="stockPercent" jdbcType="INTEGER" />
+    <result column="seckill_count" property="seckillCount" jdbcType="INTEGER" />
+    <result column="seckill_stock" property="seckillStock" jdbcType="INTEGER" />
+    <result column="seckill_blocked_stock" property="seckillBlockedStock" jdbcType="INTEGER" />
     <result column="start_date" property="startDate" jdbcType="TIMESTAMP" />
     <result column="end_date" property="endDate" jdbcType="TIMESTAMP" />
     <result column="status" property="status" jdbcType="TINYINT" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, goods_id, seckill_price, stock_count, start_date, end_date, status
+    id, goods_id, seckill_price, stock_percent, seckill_count, seckill_stock, seckill_blocked_stock, 
+    start_date, end_date, status
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
@@ -25,10 +29,12 @@
   </delete>
   <insert id="insert" parameterType="com.leozz.entity.SecActivity" >
     insert into seckill_activity (id, goods_id, seckill_price, 
-      stock_count, start_date, end_date, 
+      stock_percent, seckill_count, seckill_stock, 
+      seckill_blocked_stock, start_date, end_date, 
       status)
     values (#{id,jdbcType=BIGINT}, #{goodsId,jdbcType=BIGINT}, #{seckillPrice,jdbcType=DECIMAL}, 
-      #{stockCount,jdbcType=INTEGER}, #{startDate,jdbcType=TIMESTAMP}, #{endDate,jdbcType=TIMESTAMP}, 
+      #{stockPercent,jdbcType=INTEGER}, #{seckillCount,jdbcType=INTEGER}, #{seckillStock,jdbcType=INTEGER}, 
+      #{seckillBlockedStock,jdbcType=INTEGER}, #{startDate,jdbcType=TIMESTAMP}, #{endDate,jdbcType=TIMESTAMP}, 
       #{status,jdbcType=TINYINT})
   </insert>
   <insert id="insertSelective" parameterType="com.leozz.entity.SecActivity" >
@@ -43,8 +49,17 @@
       <if test="seckillPrice != null" >
         seckill_price,
       </if>
-      <if test="stockCount != null" >
-        stock_count,
+      <if test="stockPercent != null" >
+        stock_percent,
+      </if>
+      <if test="seckillCount != null" >
+        seckill_count,
+      </if>
+      <if test="seckillStock != null" >
+        seckill_stock,
+      </if>
+      <if test="seckillBlockedStock != null" >
+        seckill_blocked_stock,
       </if>
       <if test="startDate != null" >
         start_date,
@@ -66,8 +81,17 @@
       <if test="seckillPrice != null" >
         #{seckillPrice,jdbcType=DECIMAL},
       </if>
-      <if test="stockCount != null" >
-        #{stockCount,jdbcType=INTEGER},
+      <if test="stockPercent != null" >
+        #{stockPercent,jdbcType=INTEGER},
+      </if>
+      <if test="seckillCount != null" >
+        #{seckillCount,jdbcType=INTEGER},
+      </if>
+      <if test="seckillStock != null" >
+        #{seckillStock,jdbcType=INTEGER},
+      </if>
+      <if test="seckillBlockedStock != null" >
+        #{seckillBlockedStock,jdbcType=INTEGER},
       </if>
       <if test="startDate != null" >
         #{startDate,jdbcType=TIMESTAMP},
@@ -89,8 +113,17 @@
       <if test="seckillPrice != null" >
         seckill_price = #{seckillPrice,jdbcType=DECIMAL},
       </if>
-      <if test="stockCount != null" >
-        stock_count = #{stockCount,jdbcType=INTEGER},
+      <if test="stockPercent != null" >
+        stock_percent = #{stockPercent,jdbcType=INTEGER},
+      </if>
+      <if test="seckillCount != null" >
+        seckill_count = #{seckillCount,jdbcType=INTEGER},
+      </if>
+      <if test="seckillStock != null" >
+        seckill_stock = #{seckillStock,jdbcType=INTEGER},
+      </if>
+      <if test="seckillBlockedStock != null" >
+        seckill_blocked_stock = #{seckillBlockedStock,jdbcType=INTEGER},
       </if>
       <if test="startDate != null" >
         start_date = #{startDate,jdbcType=TIMESTAMP},
@@ -108,7 +141,10 @@
     update seckill_activity
     set goods_id = #{goodsId,jdbcType=BIGINT},
       seckill_price = #{seckillPrice,jdbcType=DECIMAL},
-      stock_count = #{stockCount,jdbcType=INTEGER},
+      stock_percent = #{stockPercent,jdbcType=INTEGER},
+      seckill_count = #{seckillCount,jdbcType=INTEGER},
+      seckill_stock = #{seckillStock,jdbcType=INTEGER},
+      seckill_blocked_stock = #{seckillBlockedStock,jdbcType=INTEGER},
       start_date = #{startDate,jdbcType=TIMESTAMP},
       end_date = #{endDate,jdbcType=TIMESTAMP},
       status = #{status,jdbcType=TINYINT}

@@ -10,20 +10,12 @@
     <result column="goods_stock" property="goodsStock" jdbcType="INTEGER" />
     <result column="blocked_stock" property="blockedStock" jdbcType="INTEGER" />
   </resultMap>
-  <resultMap id="ResultMapWithBLOBs" type="com.leozz.entity.Goods" extends="BaseResultMap" >
-    <result column="goods_detail" property="goodsDetail" jdbcType="LONGVARCHAR" />
-  </resultMap>
   <sql id="Base_Column_List" >
     id, goods_name, goods_title, goods_img, goods_price, goods_stock, blocked_stock
   </sql>
-  <sql id="Blob_Column_List" >
-    goods_detail
-  </sql>
-  <select id="selectByPrimaryKey" resultMap="ResultMapWithBLOBs" parameterType="java.lang.Long" >
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
     <include refid="Base_Column_List" />
-    ,
-    <include refid="Blob_Column_List" />
     from goods
     where id = #{id,jdbcType=BIGINT}
   </select>
@@ -34,10 +26,10 @@
   <insert id="insert" parameterType="com.leozz.entity.Goods" >
     insert into goods (id, goods_name, goods_title, 
       goods_img, goods_price, goods_stock, 
-      blocked_stock, goods_detail)
+      blocked_stock)
     values (#{id,jdbcType=BIGINT}, #{goodsName,jdbcType=VARCHAR}, #{goodsTitle,jdbcType=VARCHAR}, 
       #{goodsImg,jdbcType=VARCHAR}, #{goodsPrice,jdbcType=DECIMAL}, #{goodsStock,jdbcType=INTEGER}, 
-      #{blockedStock,jdbcType=INTEGER}, #{goodsDetail,jdbcType=LONGVARCHAR})
+      #{blockedStock,jdbcType=INTEGER})
   </insert>
   <insert id="insertSelective" parameterType="com.leozz.entity.Goods" >
     insert into goods
@@ -63,9 +55,6 @@
       <if test="blockedStock != null" >
         blocked_stock,
       </if>
-      <if test="goodsDetail != null" >
-        goods_detail,
-      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -88,9 +77,6 @@
       </if>
       <if test="blockedStock != null" >
         #{blockedStock,jdbcType=INTEGER},
-      </if>
-      <if test="goodsDetail != null" >
-        #{goodsDetail,jdbcType=LONGVARCHAR},
       </if>
     </trim>
   </insert>
@@ -115,21 +101,7 @@
       <if test="blockedStock != null" >
         blocked_stock = #{blockedStock,jdbcType=INTEGER},
       </if>
-      <if test="goodsDetail != null" >
-        goods_detail = #{goodsDetail,jdbcType=LONGVARCHAR},
-      </if>
     </set>
-    where id = #{id,jdbcType=BIGINT}
-  </update>
-  <update id="updateByPrimaryKeyWithBLOBs" parameterType="com.leozz.entity.Goods" >
-    update goods
-    set goods_name = #{goodsName,jdbcType=VARCHAR},
-      goods_title = #{goodsTitle,jdbcType=VARCHAR},
-      goods_img = #{goodsImg,jdbcType=VARCHAR},
-      goods_price = #{goodsPrice,jdbcType=DECIMAL},
-      goods_stock = #{goodsStock,jdbcType=INTEGER},
-      blocked_stock = #{blockedStock,jdbcType=INTEGER},
-      goods_detail = #{goodsDetail,jdbcType=LONGVARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.leozz.entity.Goods" >
