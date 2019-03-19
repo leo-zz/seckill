@@ -1,7 +1,9 @@
 package com.leozz.dao;
 
 import com.leozz.entity.SecActivity;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface SecActivityMapper {
     int deleteByPrimaryKey(Long id);
 

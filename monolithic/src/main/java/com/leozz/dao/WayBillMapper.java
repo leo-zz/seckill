@@ -1,7 +1,9 @@
 package com.leozz.dao;
 
 import com.leozz.entity.WayBill;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface WayBillMapper {
     int deleteByPrimaryKey(Long id);
 

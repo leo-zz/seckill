@@ -1,7 +1,9 @@
 package com.leozz.dao;
 
 import com.leozz.entity.DeliveryAddr;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface DeliveryAddrMapper {
     int deleteByPrimaryKey(Long id);
 
@@ -14,4 +16,6 @@ public interface DeliveryAddrMapper {
     int updateByPrimaryKeySelective(DeliveryAddr record);
 
     int updateByPrimaryKey(DeliveryAddr record);
+
+    DeliveryAddr selectDefaultByUserId(Long userId);
 }

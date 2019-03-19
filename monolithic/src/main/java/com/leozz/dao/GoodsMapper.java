@@ -1,7 +1,9 @@
 package com.leozz.dao;
 
 import com.leozz.entity.Goods;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface GoodsMapper {
     int deleteByPrimaryKey(Long id);
 

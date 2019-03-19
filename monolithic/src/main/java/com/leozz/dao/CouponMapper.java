@@ -1,7 +1,9 @@
 package com.leozz.dao;
 
 import com.leozz.entity.Coupon;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface CouponMapper {
     int deleteByPrimaryKey(Long id);
 
