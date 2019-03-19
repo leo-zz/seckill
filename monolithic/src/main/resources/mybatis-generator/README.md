@@ -1,1 +1,0 @@
-数据库逆向生成实体类，请参考http://www.cnblogs.com/lichenwei/p/4145696.html
