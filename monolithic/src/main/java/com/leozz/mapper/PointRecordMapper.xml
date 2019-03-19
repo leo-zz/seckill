@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.leozz.dao.ScoreRecordMapper" >
-  <resultMap id="BaseResultMap" type="com.leozz.entity.ScoreRecord" >
+<mapper namespace="com.leozz.dao.PointRecordMapper" >
+  <resultMap id="BaseResultMap" type="com.leozz.entity.PointRecord" >
     <id column="id" property="id" jdbcType="BIGINT" />
     <result column="order_id" property="orderId" jdbcType="BIGINT" />
     <result column="cause" property="cause" jdbcType="TINYINT" />
@@ -21,13 +21,13 @@
     delete from point_record
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="com.leozz.entity.ScoreRecord" >
+  <insert id="insert" parameterType="com.leozz.entity.PointRecord" >
     insert into point_record (id, order_id, cause, 
       update_amount, update_date)
     values (#{id,jdbcType=BIGINT}, #{orderId,jdbcType=BIGINT}, #{cause,jdbcType=TINYINT}, 
       #{updateAmount,jdbcType=DECIMAL}, #{updateDate,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="com.leozz.entity.ScoreRecord" >
+  <insert id="insertSelective" parameterType="com.leozz.entity.PointRecord" >
     insert into point_record
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
@@ -64,7 +64,7 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.ScoreRecord" >
+  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.PointRecord" >
     update point_record
     <set >
       <if test="orderId != null" >
@@ -82,7 +82,7 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.ScoreRecord" >
+  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.PointRecord" >
     update point_record
     set order_id = #{orderId,jdbcType=BIGINT},
       cause = #{cause,jdbcType=TINYINT},
