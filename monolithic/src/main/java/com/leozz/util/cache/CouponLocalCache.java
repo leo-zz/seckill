@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** 优惠券类型信息的本地缓存，用户拥有优惠券的信息仍然是从数据库查询
  * @Author: leo-zz
@@ -17,6 +18,8 @@ public class CouponLocalCache {
 
     @Autowired
     CouponMapper couponMapper;
+
+    private ConcurrentHashMap<String,Coupon> map;
 
 
     /**
@@ -35,6 +38,10 @@ public class CouponLocalCache {
      * @return
      */
     public int frozenCouponById(Long couponId) {
-        return couponMapper.frozenCouponById(couponId);
+         couponMapper.frozenCouponById(couponId);
+        return
+    }
+
+    public Coupon selectById(Long fullrangeCouponId) {
     }
 }

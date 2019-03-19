@@ -23,4 +23,7 @@ public class UserLocalCache {
         return  userMapper.selectByPrimaryKey(userId);
 
     }
+
+    public void updateUserPointById(Long userId) {
+    }
 }
