@@ -5,7 +5,9 @@ import com.leozz.entity.Coupon;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** 优惠券类型信息的本地缓存，用户拥有优惠券的信息仍然是从数据库查询
@@ -19,7 +21,7 @@ public class CouponLocalCache {
     @Autowired
     CouponMapper couponMapper;
 
-    private ConcurrentHashMap<String,Coupon> map;
+    private Map<Long, Coupon> couponMap = new ConcurrentHashMap<>();
 
 
     /**
@@ -29,7 +31,10 @@ public class CouponLocalCache {
      * @return
      */
     public List<Coupon> selectUsableCouponByUserId(Long userId, double price) {
-        return  couponMapper.selectUsableCouponByUserId(userId,price);
+        HashMap<String, Object> paramMap = new HashMap<>();
+        paramMap.put("userId",userId);
+        paramMap.put("price",price);
+        return  couponMapper.selectUsableCouponByUserId(paramMap);
     }
 
     /**
@@ -42,6 +47,6 @@ public class CouponLocalCache {
         return
     }
 
-    public Coupon selectById(Long fullrangeCouponId) {
+    public Coupon selectById(Long couponId) {
     }
 }

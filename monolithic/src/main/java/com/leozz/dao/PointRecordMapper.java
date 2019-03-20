@@ -16,4 +16,6 @@ public interface PointRecordMapper {
     int updateByPrimaryKeySelective(PointRecord record);
 
     int updateByPrimaryKey(PointRecord record);
+
+    PointRecord selectRecordByOrder(Long id);
 }

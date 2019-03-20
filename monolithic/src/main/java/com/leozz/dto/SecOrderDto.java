@@ -3,6 +3,7 @@ package com.leozz.dto;
 import com.leozz.entity.SecOrder;
 
 /**
+ *  基于订单实体类SecOrder的扩充，可以使用继承的方式，也可以使用组合的方式
  * @Author: leo-zz
  * @Date: 2019/3/18 14:21
  */
@@ -17,6 +18,19 @@ public class SecOrderDto extends SecOrder {
     public SecOrderDto() {
     }
 
+    public SecOrderDto(SecOrder secOrder) {
+        super.setActivityId(secOrder.getActivityId());
+        super.setAmount(secOrder.getAmount());
+        super.setCouponUsage(secOrder.getCouponUsage());
+        super.setCreateDate(secOrder.getCreateDate());
+        super.setDeliveryAddrId(secOrder.getDeliveryAddrId());
+        super.setId(secOrder.getId());
+        super.setOrderChannel(secOrder.getOrderChannel());
+        super.setPayDate(secOrder.getPayDate());
+        super.setPointUsage(secOrder.getPointUsage());
+        super.setStatus(secOrder.getStatus());
+        super.setUserId(secOrder.getUserId());
+    }
 
     public Long getFullrangeCouponId() {
         return fullrangeCouponId;
