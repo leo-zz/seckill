@@ -5,9 +5,9 @@ import com.leozz.dto.SecActivityDTO;
 import com.leozz.entity.Goods;
 import com.leozz.entity.SecActivity;
 import com.leozz.service.SecActivityService;
-import com.leozz.service.SecOrderService;
 import com.leozz.util.FlowLimiter;
 import com.leozz.util.cache.ActivitiesLocalCache;
+import com.leozz.util.cache.OrderLocalCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,10 @@ public class SecActivityServiceImpl implements SecActivityService {
     ActivitiesLocalCache activitiesLocalCache;
 
     @Autowired
-    SecOrderService secOrderService;
+    OrderLocalCache orderLocalCache;
+
+    @Autowired
+    SecActivityService secActivityService;
 
     @Override
     public boolean beginSecActivityList(SecActivity activity) {
@@ -48,18 +51,18 @@ public class SecActivityServiceImpl implements SecActivityService {
         //遍历所有秒杀活动
         for (SecActivity secActivity : secActivityList) {
             SecActivityDTO secActivityDTO = new SecActivityDTO();
-            Long id = secActivity.getId();
+            Long activityId = secActivity.getId();
 
             //获取活动商品的信息
-            Goods goods = activitiesLocalCache.getGoodsByActivityId(id);
+            Goods goods = activitiesLocalCache.getGoodsByActivityId(activityId);
             secActivityDTO.setGoodsImg(goods.getGoodsImg());
             secActivityDTO.setGoodsPrice(goods.getGoodsPrice().doubleValue());
             secActivityDTO.setGoodsTitle(goods.getGoodsTitle());
             secActivityDTO.setSeckillPrice(secActivity.getSeckillPrice().doubleValue());
-            secActivityDTO.setStockPercent(secActivity.getStockPercent());
+            secActivityDTO.setStockPercent(secActivity.getStockPercent().byteValue());
 
             //一次秒杀活动中，同一个用户只能参与一次。
-            boolean b = secOrderService.hasUserPlacedOrder(id, userId);
+            boolean b = secActivityService.hasUserPartaked(activityId, userId);
             if (b) {
                 //如果用户已参与过，则给活动增加已参与标签。
                 secActivityDTO.setButtonContent("已参与");
@@ -93,7 +96,7 @@ public class SecActivityServiceImpl implements SecActivityService {
     public ResultDTO partakeSecActivity(Long secActivityId, Long userId) {
         SecActivity secActivity = activitiesLocalCache.getSecActivityById(secActivityId);
         // 当前用户是否参与过此活动，一次秒杀活动中，同一个用户只能参与一次。
-        boolean b = secOrderService.hasUserPlacedOrder(secActivity.getId(), userId);
+        boolean b = secActivityService.hasUserPartaked(secActivityId, userId);
         if (b) {
             //如果用户已参与过，则给活动增加已参与标签。
             return new ResultDTO(false,"一位用户只能参与一次。");
@@ -107,6 +110,7 @@ public class SecActivityServiceImpl implements SecActivityService {
             //TODO 活动的状态如何能及时更新？定时任务？
             //TODO 如何处理并发问题？
             switch (secActivity.getStatus()) {
+                //未开始
                 case 1:
                     //检测活动是否已经开始，确保时间到达后，第一个请求进入时更新活动状态，后续请求不再重新更新状态，
                     // 且确保第一个请求能够公平地进行后续请求。
@@ -115,16 +119,18 @@ public class SecActivityServiceImpl implements SecActivityService {
                         activitiesLocalCache.updateStatusById(secActivityId,(byte)2);
                     }
                     return new ResultDTO(false,"未开始");
+                //已抢完
                 case 2:
                     // 检查库存是否充足
                     // TODO 此处不用增加措施防止超卖？加锁？原子性？
-                    Integer stockCount = secActivity.getStockCount();
-                    Integer blockedStockCount=secActivity.getBlockedStockCount();
+                    Integer stockCount = secActivity.getSeckillCount();
+                    Integer blockedStockCount=secActivity.getSeckillBlockedStock();
                     if(stockCount>blockedStockCount){
                         return new ResultDTO(true);
                     }else{
                         return new ResultDTO(false,"已抢完");
                     }
+                 //
                 case 3:
                     return new ResultDTO(false,"已抢完");
                 default:
@@ -135,6 +141,15 @@ public class SecActivityServiceImpl implements SecActivityService {
             return new ResultDTO(false,"活动太火爆，请稍后重试");
         }
     }
+
+
+    @Override
+    public boolean hasUserPartaked(Long activityId, Long userId) {
+        //查询用户是否存在秒杀活动对应的订单
+        //TODO 需要加锁，避免下单后数据库更新订单的时间差内，有用户重复下单；比如给用户添加一个秒杀锁，一个用户只能参与一个秒杀活动。
+        return  orderLocalCache.selectByUserAndActivity(activityId, userId);
+    }
+
 
     @Override
     public boolean checkSecActivityStatusAndStock(Long secActivityId, Long userId) {
@@ -150,4 +165,6 @@ public class SecActivityServiceImpl implements SecActivityService {
     public boolean deductGoodsStock() {
         return false;
     }
+
+
 }

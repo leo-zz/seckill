@@ -50,14 +50,6 @@ public class SecOrderServiceImpl implements SecOrderService {
 
 
     @Override
-    public boolean hasUserPlacedOrder(Long secActivityId, Long userId) {
-        //查询用户是否存在秒杀活动对应的订单
-        //TODO 需要加锁，避免下单后数据库更新订单的时间差内，有用户重复下单；比如给用户添加一个秒杀锁，一个用户只能参与一个秒杀活动。
-        int i = orderLocalCache.selectByUserAndActivity(secActivityId, userId);
-        return i > 0;
-    }
-
-    @Override
     public PreSubmitOrderDTO preSubmitOrder(Long secActivityId, Long userId) {
         PreSubmitOrderDTO preSubmitOrderDTO = new PreSubmitOrderDTO(true, "预下单成功");
 
@@ -78,22 +70,24 @@ public class SecOrderServiceImpl implements SecOrderService {
 
         //优惠券信息（筛选满足条件的优惠券，按照优惠券类别和面额排序，面额大的放到前面）
         List<Coupon> coupons = couponLocalCache.selectUsableCouponByUserId(userId, seckillPrice.doubleValue());
-        BigDecimal price = seckillPrice;
-        for (Coupon coupon : coupons) {
-            if (price.doubleValue() > coupon.getUsageLimit().doubleValue()) {
-                preSubmitOrderDTO.setFullrangeCoupon(coupon);
-                //不能使用lambda表达式，因为lambda表达式中不允许使用非final的局部变量。
-                switch (coupon.getType()) {
-                    case 0:
-                        price = price.divide(coupon.getCouponValue());
-                        break;
-                    case 1:
-
-                        preSubmitOrderDTO.setCoupon(coupon);
-                        break;
-                }
-            }
-        }
+        preSubmitOrderDTO.setCoupons(coupons);
+        //TODO 优惠券的使用推荐，一个大面额的优惠券可能没有两个小面额的优惠券优惠的金额大，前期让用户自己选择所使用的优惠券
+//        BigDecimal price = seckillPrice;
+//        for (Coupon coupon : coupons) {
+//            if (price.doubleValue() > coupon.getUsageLimit().doubleValue()) {
+//                preSubmitOrderDTO.setFullrangeCoupon(coupon);
+//                //不能使用lambda表达式，因为lambda表达式中不允许使用非final的局部变量。
+//                switch (coupon.getType()) {
+//                    case 0:
+//                        price = price.divide(coupon.getCouponValue());
+//                        break;
+//                    case 1:
+//
+//                        preSubmitOrderDTO.setCoupon(coupon);
+//                        break;
+//                }
+//            }
+//        }
         //积分信息
         User user = userLocalCache.selectUserById(userId);
         Integer point = user.getMembershipPoint();
@@ -110,7 +104,6 @@ public class SecOrderServiceImpl implements SecOrderService {
         Long userId = submitDTO.getUserId();
         SecOrderDto secOrderDto = new SecOrderDto();
 
-
         // 冻结库存（活动服务）
         SecActivity secActivity = activitiesLocalCache.getSecActivityById(activityId);
         BigDecimal seckillPrice = secActivity.getSeckillPrice();
@@ -119,14 +112,14 @@ public class SecOrderServiceImpl implements SecOrderService {
         synchronized (secActivity) {
             Integer stockCount = secActivity.getSeckillStock();
             Integer blockedStockCount = secActivity.getSeckillBlockedStock();
-            if (!(stockCount > blockedStockCount)) {
+            if (stockCount <= blockedStockCount) {
                 return new ResultDTO(false, "库存不足");
             }
-            // （公共数据）先在本地缓存中冻结库存，
-            secActivity.setSeckillBlockedStock(++blockedStockCount);//先加1后返回
+            // （公共数据）先在本地缓存中冻结库存，再批量提交到数据库
+            activitiesLocalCache.updateBlockedStockById(activityId);
         }
-        // 批量提交到数据库，
-        activitiesLocalCache.updateById(activityId);
+
+
 
         // 冻结优惠券（优惠券服务）
         //TODO 同一个用户同时只能抢购一个商品，使用优惠券和积分要加用户锁。
