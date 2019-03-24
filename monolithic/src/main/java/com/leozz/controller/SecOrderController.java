@@ -31,7 +31,7 @@ public class SecOrderController {
 
     //订单付款，付款成功则跳转付款成功页面
     @RequestMapping("/pay")
-    public boolean payOrder(long orderId) {
+    public ResultDTO payOrder(long orderId) {
         return secOrderService.paytheOrder(orderId);
     }
 
