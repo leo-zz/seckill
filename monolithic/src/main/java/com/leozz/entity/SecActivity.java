@@ -103,4 +103,20 @@ public class SecActivity {
     public void setStatus(Byte status) {
         this.status = status;
     }
+
+    @Override
+    public String toString() {
+        return "SecActivity{" +
+                "id=" + id +
+                ", goodsId=" + goodsId +
+                ", seckillPrice=" + seckillPrice +
+                ", stockPercent=" + stockPercent +
+                ", seckillCount=" + seckillCount +
+                ", seckillStock=" + seckillStock +
+                ", seckillBlockedStock=" + seckillBlockedStock +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", status=" + status +
+                '}';
+    }
 }

@@ -3,6 +3,8 @@ package com.leozz.entity;
 public class DeliveryAddr {
     private Long id;
 
+    private boolean isDefualt;
+
     private Long userId;
 
     private String recipientName;
@@ -17,6 +19,14 @@ public class DeliveryAddr {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public boolean isDefualt() {
+        return isDefualt;
+    }
+
+    public void setDefualt(boolean defualt) {
+        isDefualt = defualt;
     }
 
     public Long getUserId() {
