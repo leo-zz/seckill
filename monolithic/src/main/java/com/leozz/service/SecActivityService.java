@@ -20,7 +20,7 @@ public interface SecActivityService {
     /**
      *  获取当前秒杀活动列表，每条信息包括活动商品信息{@link GoodsService#getGoodsList()}，
      *  活动库存百分比与活动状态等内容。
-     *  一次秒杀活动中，同一个用户只能参与一次{@link SecOrderService#hasUserPlacedOrder(java.lang.Long, java.lang.Long)}
+     *  一次秒杀活动中，同一个用户只能参与一次{@link SecActivityService#hasUserPartaked(java.lang.Long, java.lang.Long)}
      * @param userId 用户id
      * @return  秒杀活动列表
      */
@@ -52,4 +52,13 @@ public interface SecActivityService {
 
     //扣减已冻结的秒杀活动中的商品库存，利用缓存，以批量提交的方式减轻数据库压力。
     boolean deductGoodsStock();
+
+    /**
+     *  根据活动编号检查用户是否已经参与过指定活动。
+     *  确保一次秒杀活动中，同一个用户只能参与一次
+     * @param activityId 活动编号的id
+     * @param userId 用户Id
+     * @return true表示用户已经下单，flase表示用户未下单
+     */
+    boolean hasUserPartaked(Long activityId, Long userId);
 }

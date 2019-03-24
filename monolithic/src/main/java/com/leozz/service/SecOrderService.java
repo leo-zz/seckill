@@ -12,14 +12,6 @@ import com.leozz.entity.SecOrder;
 public interface SecOrderService {
 
 
-    /**
-     *  检查用户是否已经参与过指定活动。
-     *  确保一次秒杀活动中，同一个用户只能参与一次
-     * @param secActivityId 活动编号的id
-     * @param userId 用户Id
-     * @return true表示用户已经下单，flase表示用户未下单
-     */
-    boolean hasUserPlacedOrder(Long secActivityId, Long userId);
 
     /**
      * 获取预下单页面的数据，包括商品信息，收件人，优惠券，积分，秒杀活动（比如：秒杀倒计时，库存百分比，秒杀价格等），支付方式（略），配送信息（略）等信息。
