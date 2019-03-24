@@ -3,6 +3,8 @@ package com.leozz.dto;
 import com.leozz.entity.Coupon;
 import com.leozz.entity.DeliveryAddr;
 
+import java.util.List;
+
 /**
  * @Author: leo-zz
  * @Date: 2019/3/14 8:50
@@ -13,15 +15,16 @@ public class PreSubmitOrderDTO {
     private String msg;
 
     //秒杀活动信息，商品信息省略
-    private Long countDownTime;   //倒计时
+    private Long countDownTime;   //倒计时，单位是ms
     private int stockPercent;   //库存百分比
 
     //收件人信息
     private DeliveryAddr deliveryAddr;
 
     //优惠券信息
-    private Coupon fullrangeCoupon;//全品类券
-    private Coupon coupon;//普通券
+    private List<Coupon> coupons;
+//    private Coupon fullrangeCoupon;//全品类券
+//    private Coupon coupon;//普通券
 
     //积分信息
     private int point;
@@ -75,20 +78,12 @@ public class PreSubmitOrderDTO {
         this.deliveryAddr = deliveryAddr;
     }
 
-    public Coupon getFullrangeCoupon() {
-        return fullrangeCoupon;
+    public List<Coupon> getCoupons() {
+        return coupons;
     }
 
-    public void setFullrangeCoupon(Coupon fullrangeCoupon) {
-        this.fullrangeCoupon = fullrangeCoupon;
-    }
-
-    public Coupon getCoupon() {
-        return coupon;
-    }
-
-    public void setCoupon(Coupon coupon) {
-        this.coupon = coupon;
+    public void setCoupons(List<Coupon> coupons) {
+        this.coupons = coupons;
     }
 
     public int getPoint() {
