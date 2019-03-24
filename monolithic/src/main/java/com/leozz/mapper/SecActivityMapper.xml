@@ -23,6 +23,13 @@
     from seckill_activity
     where id = #{id,jdbcType=BIGINT}
   </select>
+  <select id="selectRecentActivityList" resultMap="BaseResultMap" >
+    select
+    <include refid="Base_Column_List" />
+    from seckill_activity sa
+    where <![CDATA[ now()< sa.end_date ]]>
+    and <![CDATA[ TimeStampDiff(MINUTE,now(),sa.start_date)< 30 ]]>
+  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
     delete from seckill_activity
     where id = #{id,jdbcType=BIGINT}
@@ -148,6 +155,11 @@
       start_date = #{startDate,jdbcType=TIMESTAMP},
       end_date = #{endDate,jdbcType=TIMESTAMP},
       status = #{status,jdbcType=TINYINT}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateBlockedStockByPrimaryKey" parameterType="com.leozz.entity.SecActivity" >
+    update seckill_activity
+    set seckill_blocked_stock = #{seckillBlockedStock,jdbcType=INTEGER},
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

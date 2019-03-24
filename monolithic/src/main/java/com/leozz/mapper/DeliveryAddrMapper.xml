@@ -3,19 +3,26 @@
 <mapper namespace="com.leozz.dao.DeliveryAddrMapper" >
   <resultMap id="BaseResultMap" type="com.leozz.entity.DeliveryAddr" >
     <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="is_defualt" property="isDefualt" jdbcType="BIT" />
     <result column="user_id" property="userId" jdbcType="BIGINT" />
     <result column="recipient_name" property="recipientName" jdbcType="VARCHAR" />
     <result column="recipient_tel" property="recipientTel" jdbcType="VARCHAR" />
     <result column="recipient_addr" property="recipientAddr" jdbcType="VARCHAR" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, user_id, recipient_name, recipient_tel, recipient_addr
+    id,is_defualt , user_id, recipient_name, recipient_tel, recipient_addr
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
     <include refid="Base_Column_List" />
     from delivery_addr
     where id = #{id,jdbcType=BIGINT}
+  </select>
+  <select id="selectDefaultByUserId" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select
+    <include refid="Base_Column_List" />
+    from delivery_addr
+    where id = #{id,jdbcType=BIGINT} and is_defualt = 1
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
     delete from delivery_addr

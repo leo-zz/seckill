@@ -17,6 +17,17 @@
     from coupon
     where id = #{id,jdbcType=BIGINT}
   </select>
+  <select id="selectUsableCouponByUserId" resultMap="BaseResultMap" parameterType="java.util.map" >
+    select
+    <include refid="Base_Column_List" />
+    from user_coupon_record ucr,coupon c
+    where
+    ucr.coupon_id=c.id
+    and ucr.user_id = #{userId}
+    and  <![CDATA[  c.usage_limit < #{price} ]]>
+    and ucr.`status`='0'
+    order by c.type desc ,c.coupon_value desc
+  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
     delete from coupon
     where id = #{id,jdbcType=BIGINT}
