@@ -8,9 +8,7 @@ import com.leozz.entity.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,23 +33,35 @@ public class OrderLocalCache {
     @Autowired
     UserCouponRecordMapper userCouponRecordMapper;
 
+    //存放order
     private Map<Long, SecOrderDto> orderMap = new ConcurrentHashMap<>();
+
+    //用于存放用户和活动的对应关系
+    private Set<String> activityUserSets = new HashSet<>();
 
     /**
      * 对用户操作进行加锁，避免用户重复下单
      * 先检查缓存，再检查数据库
-     *
+     * TODO 场景中，绝大多数情况下是用户未参与过秒杀活动，如果按照上面的逻辑，每次都会查询数据库。先屏蔽掉缓存环节
      * @param secActivityId
      * @param userId
      * @return
      */
-    public int selectByUserAndActivity(Long secActivityId, Long userId) {
-        User user = userLocalCache.selectUserById(userId);
+    public boolean selectByUserAndActivity(Long secActivityId, Long userId) {
+
+//        boolean contains = activityUserSets.contains(secActivityId.toString() + userId.toString());
+//        //如果缓存中有记录，则直接返回
+//        if (contains) {
+//            return contains;
+//        }
+        //尽可能的缩小加锁范围
         Map<String, Long> paramMap = new HashMap<>(2);
         paramMap.put("secActivityId", secActivityId);
         paramMap.put("userId", userId);
+        User user = userLocalCache.selectUserById(userId);
+        //如果没有记录，则再向数据库中确认一下
         synchronized (user) {
-            return orderMapper.selectOrderCountByUserAndActivity(paramMap);
+            return orderMapper.selectOrderCountByUserAndActivity(paramMap)>0;
         }
     }
 
@@ -105,5 +115,9 @@ public class OrderLocalCache {
     public int saveOrderToDBById(long orderId) {
         SecOrderDto secOrderDto = orderMap.get(orderId);
         return orderMapper.updateByPrimaryKeySelective(secOrderDto);
+    }
+
+    public int updateOrderById(long orderId) {
+        return 0;
     }
 }

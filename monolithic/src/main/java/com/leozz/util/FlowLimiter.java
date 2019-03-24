@@ -21,6 +21,7 @@ public class FlowLimiter {
     private  Map<Long,Semaphore> limiter=new ConcurrentHashMap<>();
 
     //为指定的活动添加限流器
+    //TODO 活动结束后要能够自动回收对应的限流器
     public  Semaphore getLimiter(Long secActivityId,Integer seckillCount){
         boolean b = limiter.containsKey(secActivityId);
         if(b){

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -46,10 +47,17 @@ public class ActivitiesLocalCache {
     private volatile boolean updatedFlag = false;
 
 
+    /**
+     * 获取缓存中的活动列表信息，如果超过时间间隔会对缓存进行刷新。首次调用时，会从数据库拿取
+     * 最近的活动列表信息{@link SecActivityMapper#selectRecentActivityList()}
+     *
+     * @return
+     */
     public List<SecActivity> getActivityList() {
 
         if (secActivityMap == null) {
             //第一次获取列表时，刷新本地缓存
+            //
             secActivityList = secActivityMapper.selectRecentActivityList();
             secActivityMap = new ConcurrentHashMap<>(secActivityList.size());
             goodsMap = new ConcurrentHashMap<>(secActivityList.size());
@@ -85,6 +93,7 @@ public class ActivitiesLocalCache {
             while (--count > 0) {
                 if (updatedFlag) {
                     updatedFlag = false;
+                    //TODO 场景中，秒杀活动列表更新的频率很低，要先判断是否变动，然后再修改。而不是每次都更新
                     secActivityList = secActivityMapper.selectRecentActivityList();
                     UserDefThreadPool.jobExecutor.execute(() -> {
                         updateCache(secActivityList);
@@ -118,35 +127,52 @@ public class ActivitiesLocalCache {
                 activityMapBack.put(id, secActivity);
                 Long goodsId = secActivity.getGoodsId();
                 //刷新商品信息
-                if(!goodsMapBack.containsKey(goodsId)){
-                    if(goodsMap.containsKey(goodsId)){
-                        goodsMapBack.put(id,goodsMap.get(id));
-                    }else{
-                        goodsMapBack.put(id,goodsMapper.selectByPrimaryKey(id));
+                if (!goodsMapBack.containsKey(goodsId)) {
+                    if (goodsMap.containsKey(goodsId)) {
+                        goodsMapBack.put(id, goodsMap.get(id));
+                    } else {
+                        goodsMapBack.put(id, goodsMapper.selectByPrimaryKey(id));
                     }
                 }
 
             });
             //为解决问题1引入的策略：原始的secActivityMap需要GC回收，可能会增大GC压力
             secActivityMap = activityMapBack;
-            goodsMap= goodsMapBack;
+            goodsMap = goodsMapBack;
             updatedFlag = true;
             updateTimeStramp = System.currentTimeMillis();
         }
     }
 
-    public void updateStatusById(Long secActivityId, byte i) {
+    @Transactional
+    public int updateStatusById(Long secActivityId, byte i) {
         secActivityMap.get(secActivityId).setStatus(i);
         //先写入缓存再存入数据库，顺序对吗？
-        secActivityMapper.updateStatusById(secActivityId,i);
+        SecActivity secActivity = new SecActivity();
+        secActivity.setId(secActivityId);
+        secActivity.setStatus(i);
+        //未赋值的属性为null
+        return secActivityMapper.updateByPrimaryKeySelective(secActivity);
     }
 
-    //秒杀活动中都是先拿到活动列表，才会拿取商品，因此不考虑goodsMap=null的情况。
+    /**
+     * 秒杀活动中都是先拿到活动列表，才会拿取商品，因此不考虑goodsMap=null的情况。
+     */
     public Goods getGoodsByActivityId(Long id) {
         return goodsMap.get(id);
     }
 
-    //加锁
-    public void updateById(Long activityId) {
+    /**
+     * 更新活动的冻结库存，每10次刷新到数据库
+     *
+     * @param activityId
+     */
+    public void updateBlockedStockById(Long activityId) {
+        SecActivity secActivity = secActivityMap.get(activityId);
+        Integer blockedStockCount = secActivity.getSeckillBlockedStock();
+        secActivity.setSeckillBlockedStock(++blockedStockCount);//先加1后返回
+        if(secActivity.getSeckillBlockedStock()%10==0){
+            secActivityMapper.updateBlockedStockByPrimaryKey(secActivity);
+        }
     }
 }
