@@ -17,5 +17,5 @@ public interface PointRecordMapper {
 
     int updateByPrimaryKey(PointRecord record);
 
-    PointRecord selectRecordByOrder(Long id);
+    PointRecord selectRecordByOrderId(Long id);
 }

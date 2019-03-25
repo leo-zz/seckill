@@ -3,6 +3,9 @@ package com.leozz.dao;
 import com.leozz.entity.User;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Repository
 public interface UserMapper {
     int deleteByPrimaryKey(Long id);
@@ -16,4 +19,6 @@ public interface UserMapper {
     int updateByPrimaryKeySelective(User record);
 
     int updateByPrimaryKey(User record);
+
+    int updateBlockedPointById(Map<String, Object> paraMap);
 }
