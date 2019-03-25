@@ -5,7 +5,9 @@ import com.leozz.dto.ResultDTO;
 import com.leozz.dto.SecActivityDTO;
 import com.leozz.service.SecActivityService;
 import com.leozz.service.SecOrderService;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,6 +32,7 @@ public class SecActivityListController {
      * 获取当前秒杀活动列表
      * @return 秒杀活动列表页需要的数据
      */
+    @ApiOperation(value="获取秒杀活动列表", notes="需要从session中拿取userId")
     @RequestMapping("/list")
     public List<SecActivityDTO> getSecActivityList(HttpServletRequest request){
         HttpSession session = request.getSession();
@@ -40,11 +43,12 @@ public class SecActivityListController {
 
     /**
      * 点击按钮，参与秒杀活动，参与成功则跳转到预下单页面。
-     * @param secActivityId
+     * @param secActivityId 活动id
      * @return 下单页需要的数据
      */
-    @RequestMapping("/partake")
-    public PreSubmitOrderDTO partakeSecActivity(HttpServletRequest request,Long secActivityId){
+    @ApiOperation(value="参与秒杀活动", notes="从访问路径中拿取活动id，从session中拿取userId")
+    @RequestMapping("/partake/{secActivityId}")
+    public PreSubmitOrderDTO partakeSecActivity(HttpServletRequest request,@PathVariable Long secActivityId){
         HttpSession session = request.getSession();
         Long userId = (Long)session.getAttribute("userId");
 
