@@ -17,7 +17,7 @@ public class SubmitDTO {
     //订单来源
     private Byte orderChannel;
 
-    //优惠券信息
+    //优惠券的id信息
     private Long fullrangeCouponId;
     private Long couponId;
     //积分信息

@@ -22,7 +22,7 @@ public class PreSubmitOrderDTO {
     private DeliveryAddr deliveryAddr;
 
     //优惠券信息
-    private List<Coupon> coupons;
+    private List<CouponDTO> coupons;
 //    private Coupon fullrangeCoupon;//全品类券
 //    private Coupon coupon;//普通券
 
@@ -78,11 +78,11 @@ public class PreSubmitOrderDTO {
         this.deliveryAddr = deliveryAddr;
     }
 
-    public List<Coupon> getCoupons() {
+    public List<CouponDTO> getCoupons() {
         return coupons;
     }
 
-    public void setCoupons(List<Coupon> coupons) {
+    public void setCoupons(List<CouponDTO> coupons) {
         this.coupons = coupons;
     }
 
