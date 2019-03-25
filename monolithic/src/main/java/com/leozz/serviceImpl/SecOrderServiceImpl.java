@@ -1,10 +1,7 @@
 package com.leozz.serviceImpl;
 
 import com.leozz.dao.DeliveryAddrMapper;
-import com.leozz.dto.PreSubmitOrderDTO;
-import com.leozz.dto.ResultDTO;
-import com.leozz.dto.SecOrderDto;
-import com.leozz.dto.SubmitDTO;
+import com.leozz.dto.*;
 import com.leozz.entity.*;
 import com.leozz.service.PayService;
 import com.leozz.service.SecOrderService;
@@ -69,7 +66,7 @@ public class SecOrderServiceImpl implements SecOrderService {
         preSubmitOrderDTO.setDeliveryAddr(addr);
 
         //优惠券信息（筛选满足条件的优惠券，按照优惠券类别和面额排序，面额大的放到前面）
-        List<Coupon> coupons = couponLocalCache.selectUsableCouponByUserId(userId, seckillPrice.doubleValue());
+        List<CouponDTO> coupons = couponLocalCache.selectUsableCouponByUserId(userId, seckillPrice.doubleValue());
         preSubmitOrderDTO.setCoupons(coupons);
         //TODO 优惠券的使用推荐，一个大面额的优惠券可能没有两个小面额的优惠券优惠的金额大，前期让用户自己选择所使用的优惠券
 //        BigDecimal price = seckillPrice;
@@ -102,6 +99,7 @@ public class SecOrderServiceImpl implements SecOrderService {
     public ResultDTO submitOrder(SubmitDTO submitDTO) {
         Long activityId = submitDTO.getActivityId();
         Long userId = submitDTO.getUserId();
+        User user = userLocalCache.selectUserById(userId);
         SecOrderDto secOrderDto = new SecOrderDto();
 
         // 冻结库存（活动服务）
@@ -120,17 +118,18 @@ public class SecOrderServiceImpl implements SecOrderService {
         }
 
 
-
         // 冻结优惠券（优惠券服务）
         //TODO 同一个用户同时只能抢购一个商品，使用优惠券和积分要加用户锁。
         //TODO 对用户信息、订单信息进行缓存。
         Long fullrangeCouponId = submitDTO.getFullrangeCouponId();
         Long couponId = submitDTO.getCouponId();
         if (fullrangeCouponId > 0) {
-            Coupon fullrangeCoupon = couponLocalCache.selectById(fullrangeCouponId);
-            int i = couponLocalCache.frozenCouponById(fullrangeCouponId);
-            if (i != 1) {
-                return new ResultDTO(false, "全品类优惠券不存在");
+            Coupon fullrangeCoupon = couponLocalCache.selectCouponById(fullrangeCouponId);
+            synchronized (user) {
+                int i = couponLocalCache.frozenCouponById(fullrangeCouponId, userId);
+                if (i != 1) {
+                    return new ResultDTO(false, "全品类优惠券不可用");
+                }
             }
             secOrderDto.setFullrangeCouponId(fullrangeCouponId);
             //达到优惠券使用标准，扣减订单价格
@@ -140,10 +139,12 @@ public class SecOrderServiceImpl implements SecOrderService {
             secOrderDto.setCouponUsage(true);
         }
         if (couponId > 0) {
-            Coupon coupon = couponLocalCache.selectById(couponId);
-            int i = couponLocalCache.frozenCouponById(couponId);
-            if (i != 1) {
-                return new ResultDTO(false, "单品优惠券不存在");
+            Coupon coupon = couponLocalCache.selectCouponById(couponId);
+            synchronized (user) {
+                int i = couponLocalCache.frozenCouponById(couponId, userId);
+                if (i != 1) {
+                    return new ResultDTO(false, "单品优惠券不可用");
+                }
             }
             secOrderDto.setCouponId(couponId);
             //达到优惠券使用标准，扣减订单价格
@@ -158,18 +159,20 @@ public class SecOrderServiceImpl implements SecOrderService {
         // 冻结积分（用户服务）
         int usedPoint = submitDTO.getUsedPoint();
         if (usedPoint > 0) {
-            User user = userLocalCache.selectUserById(userId);
-            Integer point = user.getMembershipPoint();
-            Integer blockedPoint = user.getBlockedMembershipPoint();
-            if (point < usedPoint + blockedPoint) {
-                return new ResultDTO(false, "用户积分不足");
+            //加锁
+            synchronized (user) {
+                Integer point = user.getMembershipPoint();
+                Integer blockedPoint = user.getBlockedMembershipPoint();
+                if (point < usedPoint + blockedPoint) {
+                    return new ResultDTO(false, "用户积分不足");
+                }
+                user.setBlockedMembershipPoint(usedPoint + blockedPoint);
+                userLocalCache.updateUserPointById(userId);
+                //扣减订单价格
+                seckillPrice = seckillPrice.divide(new BigDecimal(usedPoint / 100));
+                secOrderDto.setPointUsage(true);
+                secOrderDto.setUsedPoint(usedPoint);
             }
-            user.setBlockedMembershipPoint(usedPoint + blockedPoint);
-            userLocalCache.updateUserPointById(userId);
-            //扣减订单价格
-            seckillPrice = seckillPrice.divide(new BigDecimal(usedPoint / 100));
-            secOrderDto.setPointUsage(true);
-            secOrderDto.setUsedPoint(usedPoint);
         }
 
         secOrderDto.setUserId(userId);
@@ -192,6 +195,7 @@ public class SecOrderServiceImpl implements SecOrderService {
     @Override
     public ResultDTO paytheOrder(long orderId) {
         SecOrderDto order = orderLocalCache.getSecOrderDtoById(orderId);
+        Long userId = order.getUserId();
         double orderAmount = order.getAmount().doubleValue();//支付金额
         //供支付渠道回调，更新订单支付状态。
         Long activityId = order.getActivityId();
@@ -202,7 +206,7 @@ public class SecOrderServiceImpl implements SecOrderService {
             return new ResultDTO(false, "订单支付失败");
         }
 
-        //扣除活动中的库存
+        //扣除活动中的库存,对抢购活动加锁
         SecActivity secActivity = activitiesLocalCache.getSecActivityById(activityId);
         synchronized (secActivity) {
             Integer stockCount = secActivity.getSeckillStock();
@@ -222,22 +226,22 @@ public class SecOrderServiceImpl implements SecOrderService {
                 }
                 secActivity.setStatus((byte) 3); //商品都被锁定，没有可卖库存，除非有人取消订单。
             }
+            // 批量提交到数据库,考虑是否可以拿到同步范围外面
+            activitiesLocalCache.updateAfterPayOrder(activityId);
         }
-        // 批量提交到数据库
-        activitiesLocalCache.updateById(activityId);
 
         //扣除优惠券
         if (order.getCouponUsage()) {
             Long fullrangeCouponId = order.getFullrangeCouponId();
             if (fullrangeCouponId > 0) {
-                int i = couponLocalCache.frozenCouponById(fullrangeCouponId);
+                int i = couponLocalCache.deductCouponById(fullrangeCouponId, userId);
                 if (i != 1) {
                     return new ResultDTO(false, "全品类优惠券不存在");
                 }
             }
             Long couponId = order.getCouponId();
             if (couponId > 0) {
-                int i = couponLocalCache.frozenCouponById(couponId);
+                int i = couponLocalCache.deductCouponById(couponId, userId);
                 if (i != 1) {
                     return new ResultDTO(false, "单品优惠券不存在");
                 }
@@ -245,7 +249,7 @@ public class SecOrderServiceImpl implements SecOrderService {
         }
         //扣除积分
         if (order.getPointUsage()) {
-            Long userId = order.getUserId();
+
             Integer usedPoint = order.getUsedPoint();
             User user = userLocalCache.selectUserById(userId);
             Integer point = user.getMembershipPoint();

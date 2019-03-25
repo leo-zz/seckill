@@ -1,8 +1,13 @@
 package com.leozz.serviceImpl;
 
+import com.leozz.dao.WayBillMapper;
 import com.leozz.entity.SecOrder;
+import com.leozz.entity.WayBill;
 import com.leozz.service.WayBillService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
 
 /**
  * @Author: leo-zz
@@ -10,8 +15,15 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class WayBillServiceImpl implements WayBillService {
+
+    @Autowired
+    WayBillMapper wayBillMapper;
     @Override
     public boolean createWayBill(SecOrder order) {
-        return false;
+        WayBill wayBill = new WayBill();
+        wayBill.setCreateDate(new Date());
+        wayBill.setOrderId(order.getId());
+        int i = wayBillMapper.insertSelective(wayBill);
+        return i==1;
     }
 }
