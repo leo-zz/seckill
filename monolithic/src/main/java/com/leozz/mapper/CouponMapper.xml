@@ -17,9 +17,9 @@
     from coupon
     where id = #{id,jdbcType=BIGINT}
   </select>
-  <select id="selectUsableCouponByUserId" resultMap="BaseResultMap" parameterType="java.util.map" >
+  <select id="selectUsableCouponByUserId" resultType="com.leozz.dto.CouponDTO" parameterType="java.util.map" >
     select
-    <include refid="Base_Column_List" />
+    ucr.id as recordId , c.id, c.type, c.coupon_name, c.usage_limit, c.coupon_value
     from user_coupon_record ucr,coupon c
     where
     ucr.coupon_id=c.id

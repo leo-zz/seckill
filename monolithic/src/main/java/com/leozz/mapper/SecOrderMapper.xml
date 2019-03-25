@@ -37,7 +37,7 @@
     delete from seckill_order
     where id = #{id,jdbcType=BIGINT}
   </delete>
-    <insert id="insert" parameterType="com.leozz.entity.SecOrder">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="com.leozz.entity.SecOrder">
     insert into seckill_order (id, user_id, activity_id, 
       delivery_addr_id, amount, order_channel, 
       status, create_date, pay_date, 
@@ -47,7 +47,7 @@
       #{status,jdbcType=TINYINT}, #{createDate,jdbcType=TIMESTAMP}, #{payDate,jdbcType=TIMESTAMP}, 
       #{couponUsage,jdbcType=BIT}, #{pointUsage,jdbcType=BIT})
   </insert>
-    <insert id="insertSelective" parameterType="com.leozz.entity.SecOrder">
+    <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id" parameterType="com.leozz.entity.SecOrder">
         insert into seckill_order
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
