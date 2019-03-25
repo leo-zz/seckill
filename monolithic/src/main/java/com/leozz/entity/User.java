@@ -3,7 +3,7 @@ package com.leozz.entity;
 import java.util.Date;
 
 public class User {
-    private Long id;
+    private Long id; //id作为用户登录的凭证
 
     private String nickname;
 
