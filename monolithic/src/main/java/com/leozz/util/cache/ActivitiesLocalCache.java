@@ -116,7 +116,7 @@ public class ActivitiesLocalCache {
 
     //加锁，确保同时只能更新一次
     //每次刷新缓存都是重新覆盖，有无优化空间？
-    public void updateCache(List<SecActivity> secActivityList) {
+    private void updateCache(List<SecActivity> secActivityList) {
         synchronized (this) {
             //问题1：每次刷新前都会清空，可能会导致其他地方出现空指针问题？
             //secActivityMap.clear();
@@ -174,5 +174,10 @@ public class ActivitiesLocalCache {
         if(secActivity.getSeckillBlockedStock()%10==0){
             secActivityMapper.updateBlockedStockByPrimaryKey(secActivity);
         }
+    }
+
+    public int updateAfterPayOrder(Long activityId) {
+        SecActivity secActivity = secActivityMap.get(activityId);
+        return  secActivityMapper.updateByPrimaryKeySelective(secActivity);
     }
 }

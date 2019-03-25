@@ -6,6 +6,7 @@ import com.leozz.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,6 +43,17 @@ public class UserLocalCache {
         return user;
     }
 
-    public void updateUserPointById(Long userId) {
+    /**
+     * 冻结用户的积分，由于用户积分变动不频繁,不再批量提交
+     * @param userId
+     * @return
+     */
+    public int updateUserPointById(Long userId) {
+        User user = userMap.get(userId);
+        Integer blockedMembershipPoint = user.getBlockedMembershipPoint();
+        HashMap<String, Object> paraMap = new HashMap<>();
+        paraMap.put("userId",userId);
+        paraMap.put("blockedPoint",blockedMembershipPoint);
+        return userMapper.updateBlockedPointById(paraMap);
     }
 }

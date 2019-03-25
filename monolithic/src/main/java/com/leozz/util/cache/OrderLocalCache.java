@@ -43,6 +43,7 @@ public class OrderLocalCache {
      * 对用户操作进行加锁，避免用户重复下单
      * 先检查缓存，再检查数据库
      * TODO 场景中，绝大多数情况下是用户未参与过秒杀活动，如果按照上面的逻辑，每次都会查询数据库。先屏蔽掉缓存环节
+     *
      * @param secActivityId
      * @param userId
      * @return
@@ -61,17 +62,27 @@ public class OrderLocalCache {
         User user = userLocalCache.selectUserById(userId);
         //如果没有记录，则再向数据库中确认一下
         synchronized (user) {
-            return orderMapper.selectOrderCountByUserAndActivity(paramMap)>0;
+            return orderMapper.selectOrderCountByUserAndActivity(paramMap) > 0;
         }
     }
 
     public int insert(SecOrderDto secOrder) {
+        //先放入数据库，然后再放入缓存,要求能获取到数据库生成的id
+        int num = orderMapper.insertSelective(secOrder);
         orderMap.put(secOrder.getId(), secOrder);//放入缓存，
-        // 是否异步存入数据库   UserDefThreadPool.jobExecutor.execute(() -> {
-        return orderMapper.insert(secOrder);
-//        });
+        // 是否异步存入数据库
+        // UserDefThreadPool.jobExecutor.execute(() -> {
+        return num;
+        //        });
     }
 
+    /**
+     * 获取用户提交的订单信息
+     * 正常情况下，在用户提交订单时，会将订单对象secOrderDto保存到缓存中
+     * 如果缓存中找不到订单对象secOrderDto，那么会从多个关联表中查询
+     * @param orderId
+     * @return
+     */
     public SecOrderDto getSecOrderDtoById(long orderId) {
         SecOrderDto secOrderDto = null;
         secOrderDto = orderMap.get(orderId);
@@ -81,26 +92,28 @@ public class OrderLocalCache {
             secOrderDto = new SecOrderDto(secOrder);
             //查找优惠券
             if (secOrder.getCouponUsage()) {
-                List<UserCouponRecord> records = userCouponRecordMapper.selectRecordsByOrder(secOrder.getId());
+                List<UserCouponRecord> records = userCouponRecordMapper.selectRecordsByOrderId(secOrder.getId());
 
                 for (UserCouponRecord record : records) {
                     Long couponId = record.getCouponId();
-                    Coupon coupon = couponLocalCache.selectById(couponId);
+                    Long id = record.getId();   //保存用户使用的优惠券的信息
+                    Coupon coupon = couponLocalCache.selectCouponById(couponId);
                     switch (coupon.getType()) {
                         case 0:
-                            secOrderDto.setFullrangeCouponId(couponId);
+                            secOrderDto.setFullrangeCouponId(id);
                             break;
                         case 1:
-                            secOrderDto.setCouponId(couponId);
+                            secOrderDto.setCouponId(id);
                             break;
                     }
                 }
             }
             //查找积分信息
             if (secOrder.getPointUsage()) {
-                PointRecord record = pointRecordMapper.selectRecordByOrder(secOrder.getId());
+                PointRecord record = pointRecordMapper.selectRecordByOrderId(secOrder.getId());
                 secOrderDto.setUsedPoint(record.getUpdateAmount());
             }
+            orderMap.put(orderId,secOrderDto);
         }
         return secOrderDto;
 
@@ -117,7 +130,10 @@ public class OrderLocalCache {
         return orderMapper.updateByPrimaryKeySelective(secOrderDto);
     }
 
+
     public int updateOrderById(long orderId) {
-        return 0;
+        //TODO 暂未考虑缓存丢失后，如何能从回源拿到数据
+        SecOrderDto secOrderDto = orderMap.get(orderId);
+        return orderMapper.updateByPrimaryKeySelective(secOrderDto);
     }
 }
