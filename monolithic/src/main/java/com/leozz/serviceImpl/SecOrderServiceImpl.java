@@ -193,9 +193,14 @@ public class SecOrderServiceImpl implements SecOrderService {
     }
 
     @Override
-    public ResultDTO paytheOrder(long orderId) {
+    public ResultDTO paytheOrder(long orderId,Long userId1) {
         SecOrderDto order = orderLocalCache.getSecOrderDtoById(orderId);
         Long userId = order.getUserId();
+
+        if(!userId.equals(userId1)){
+            return new ResultDTO(false, "账号信息不一致");
+        }
+
         double orderAmount = order.getAmount().doubleValue();//支付金额
         //供支付渠道回调，更新订单支付状态。
         Long activityId = order.getActivityId();

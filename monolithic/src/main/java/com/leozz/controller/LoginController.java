@@ -6,6 +6,7 @@ import com.leozz.util.cache.UserLocalCache;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,16 +24,24 @@ public class LoginController {
 
     @RequestMapping("/login")
     @ApiOperation(value = "用户登录接口", notes = "需要页面提交id和password信息")
-    public ResultDTO userLogin(HttpServletRequest request, User userParam) {
-        Long userId = userParam.getId();
-        User user = userLocalCache.selectUserById(userId);
+    //springmvc请求参数获取的几种方法,参考https://www.cnblogs.com/xiaoxi/p/5695783.html
+    public ResultDTO userLogin(HttpServletRequest request,@RequestParam("id") Long userId,@RequestParam("password") String password) {
+        HttpSession session = request.getSession();
+        Long userId1 = (Long)session.getAttribute("userId");
+        if(userId1!=null){
+            return new ResultDTO(false, "请勿重复登录");
+        }
 
+        if(userId==null||password==null){
+            return new ResultDTO(false, "账号密码不能为空");
+        }
+
+        User user = userLocalCache.selectUserById(userId);
         if (user == null) {
             return new ResultDTO(false, "账号不存在");
         }
-        String password = user.getPassword();
-        if (userParam.getPassword().equals(password)) {
-            HttpSession session = request.getSession();
+
+        if (password.equals(password)) {
             session.setAttribute("userId", userId);
             return new ResultDTO(true, "登录成功");
         } else {
@@ -49,7 +58,7 @@ public class LoginController {
             return new ResultDTO(false, "请先登录");
         }
         session.invalidate();//会解绑所有数据
-        return new ResultDTO(true, "登录成功");
+        return new ResultDTO(true, "退出登录成功");
     }
 
 }

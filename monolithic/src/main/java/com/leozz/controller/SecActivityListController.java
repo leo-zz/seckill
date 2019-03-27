@@ -20,7 +20,7 @@ import java.util.List;
  * @Date: 2019/3/14 8:33
  */
 @RestController
-@RequestMapping("/secactivity")
+@RequestMapping("/activity")
 public class SecActivityListController {
 
     @Autowired
@@ -28,41 +28,52 @@ public class SecActivityListController {
 
     @Autowired
     private SecOrderService secOrderService;
+
     /**
      * 获取当前秒杀活动列表
+     *
      * @return 秒杀活动列表页需要的数据
      */
-    @ApiOperation(value="获取秒杀活动列表", notes="需要从session中拿取userId")
+    @ApiOperation(value = "获取秒杀活动列表", notes = "需要从session中拿取userId")
     @RequestMapping("/list")
-    public List<SecActivityDTO> getSecActivityList(HttpServletRequest request){
+    public ResultDTO<List<SecActivityDTO>> getSecActivityList(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        Long userId = (Long)session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute("userId");
+        //判断用户是否登录
+        if (userId == null) {
+            return new ResultDTO<List<SecActivityDTO>>(false, "请先登录");
+        }
         //根据userId获取秒杀活动列表，是否要通过mybatis关联查询？
-        return secActivityService.getSecActivityList(userId);
+        List<SecActivityDTO> secActivityList = secActivityService.getSecActivityList(userId);
+        return new ResultDTO<List<SecActivityDTO>>(true, secActivityList, "获取成功");
     }
 
     /**
      * 点击按钮，参与秒杀活动，参与成功则跳转到预下单页面。
+     *
      * @param secActivityId 活动id
      * @return 下单页需要的数据
      */
-    @ApiOperation(value="参与秒杀活动", notes="从访问路径中拿取活动id，从session中拿取userId")
+    @ApiOperation(value = "参与秒杀活动", notes = "从访问路径中拿取活动id，从session中拿取userId")
     @RequestMapping("/partake/{secActivityId}")
-    public PreSubmitOrderDTO partakeSecActivity(HttpServletRequest request,@PathVariable Long secActivityId){
+    public ResultDTO<PreSubmitOrderDTO> partakeSecActivity(HttpServletRequest request, @PathVariable Long secActivityId) {
         HttpSession session = request.getSession();
-        Long userId = (Long)session.getAttribute("userId");
-
-        PreSubmitOrderDTO preSubmitOrderDTO =null;
+        Long userId = (Long) session.getAttribute("userId");
+        //判断用户是否登录
+        if (userId == null) {
+            return new ResultDTO<PreSubmitOrderDTO>(false, "请先登录");
+        }
+        PreSubmitOrderDTO preSubmitOrderDTO = null;
         //尝试参与秒杀活动
         ResultDTO resultDTO = secActivityService.partakeSecActivity(secActivityId, userId);
-        if(resultDTO.isResult()){
+        if (resultDTO.isResult()) {
             //将用户当前参与的秒杀活动放入session
-            session.setAttribute("secActivityId",secActivityId);
+            session.setAttribute("secActivityId", secActivityId);
             //获取预下单页面的信息
             preSubmitOrderDTO = secOrderService.preSubmitOrder(secActivityId, userId);
-        }else{
-            preSubmitOrderDTO = new PreSubmitOrderDTO(false,resultDTO.getMsg());
+        } else {
+            preSubmitOrderDTO = new PreSubmitOrderDTO(false, resultDTO.getMsg());
         }
-        return preSubmitOrderDTO;
+        return new ResultDTO<PreSubmitOrderDTO>(true,preSubmitOrderDTO,"预下单成功");
     }
 }

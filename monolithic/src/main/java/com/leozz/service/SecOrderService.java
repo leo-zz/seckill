@@ -31,7 +31,7 @@ public interface SecOrderService {
      * @param orderId 订单id
      * @return true表示订单支付成功
      */
-    ResultDTO paytheOrder(long orderId);
+    ResultDTO paytheOrder(long orderId,Long userId1);
 
 
 }

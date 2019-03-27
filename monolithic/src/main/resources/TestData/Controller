@@ -1,0 +1,8 @@
+登录
+POST:http://localhost:8080/login
+参数信息
+	"id"= 7,
+	"password"= 123456
+登出
+GET:http://localhost:8080/logout
+

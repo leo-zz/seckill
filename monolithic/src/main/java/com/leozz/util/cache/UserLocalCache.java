@@ -30,14 +30,17 @@ public class UserLocalCache {
      * @return
      */
     public User selectUserById(Long userId) {
+        if(userId==null)return null;
         if(userMap ==null){
             userMap =new ConcurrentHashMap<>();
         }
-        //先从缓存中查找
+        //先从缓存中查找，ConcurrentHashMap中的key不能为null，因此get前要确保userId不会null
         User user = userMap.get(userId);
         if(user==null){
             //缓存中没有再查数据库
             user= userMapper.selectByPrimaryKey(userId);
+            //如果数据库差不到用户信息，返回null
+            if(user==null)return null;
             userMap.put(userId,user);
         }
         return user;
