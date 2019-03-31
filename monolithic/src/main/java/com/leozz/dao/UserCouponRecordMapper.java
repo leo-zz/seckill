@@ -1,6 +1,5 @@
 package com.leozz.dao;
 
-import com.leozz.entity.Coupon;
 import com.leozz.entity.UserCouponRecord;
 import org.springframework.stereotype.Repository;
 
@@ -27,7 +26,7 @@ public interface UserCouponRecordMapper {
      * @param id
      * @return
      */
-    List<UserCouponRecord> selectRecordsByOrderId(Long id);
+    List<UserCouponRecord> selectRecordsByActivityId(HashMap<String, Object> id);
 
     int updateStatusById(Map<String,Object> paraMap);
 

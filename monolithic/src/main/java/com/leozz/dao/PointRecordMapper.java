@@ -3,6 +3,8 @@ package com.leozz.dao;
 import com.leozz.entity.PointRecord;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
+
 @Repository
 public interface PointRecordMapper {
     int deleteByPrimaryKey(Long id);
@@ -17,5 +19,7 @@ public interface PointRecordMapper {
 
     int updateByPrimaryKey(PointRecord record);
 
-    PointRecord selectRecordByOrderId(Long id);
+    PointRecord selectRecordByMap(HashMap<String, Object> map);
+
+    int deductUserPointByEntity(PointRecord record);
 }

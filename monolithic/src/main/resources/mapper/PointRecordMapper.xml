@@ -1,101 +1,136 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
-<mapper namespace="com.leozz.dao.PointRecordMapper" >
-  <resultMap id="BaseResultMap" type="com.leozz.entity.PointRecord" >
-    <id column="id" property="id" jdbcType="BIGINT" />
-    <result column="order_id" property="orderId" jdbcType="BIGINT" />
-    <result column="cause" property="cause" jdbcType="TINYINT" />
-    <result column="update_amount" property="updateAmount" jdbcType="DECIMAL" />
-    <result column="update_date" property="updateDate" jdbcType="TIMESTAMP" />
-  </resultMap>
-  <sql id="Base_Column_List" >
-    id, order_id, cause, update_amount, update_date
+<mapper namespace="com.leozz.dao.PointRecordMapper">
+    <resultMap id="BaseResultMap" type="com.leozz.entity.PointRecord">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="activity_id" property="activityId" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="cause" property="cause" jdbcType="TINYINT"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="update_amount" property="updateAmount" jdbcType="DECIMAL"/>
+        <result column="update_date" property="updateDate" jdbcType="TIMESTAMP"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, activity_id,user_id,cause,status,update_amount, update_date
   </sql>
-  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
-    select 
-    <include refid="Base_Column_List" />
-    from point_record
-    where order_id = #{orderId,jdbcType=BIGINT}
-  </select>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
+        select
+        <include refid="Base_Column_List"/>
+        from point_record
+        where id = #{id,jdbcType=BIGINT}
+    </select>
 
-  <select id="selectRecordByOrderId" resultMap="BaseResultMap" parameterType="java.lang.Long" >
-    select
-    <include refid="Base_Column_List" />
-    from point_record
-    where id = #{id,jdbcType=BIGINT}
-  </select>
+    <select id="selectRecordByMap" resultMap="BaseResultMap" parameterType="java.util.Map">
+        select
+        <include refid="Base_Column_List"/>
+        from point_record
+        where
+        activity_id=#{activityId,jdbcType=BIGINT}
+        and user_id=#{userId,jdbcType=BIGINT}
+        and cause=#{cause,jdbcType=TINYINT}
+    </select>
 
-  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
     delete from point_record
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="com.leozz.entity.PointRecord" >
-    insert into point_record (id, order_id, cause, 
+    <insert id="insert" parameterType="com.leozz.entity.PointRecord">
+    insert into point_record (id, activity_id,user_id, cause,status,
       update_amount, update_date)
-    values (#{id,jdbcType=BIGINT}, #{orderId,jdbcType=BIGINT}, #{cause,jdbcType=TINYINT}, 
+    values (#{id,jdbcType=BIGINT}, #{activityId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{cause,jdbcType=TINYINT},#{status,jdbcType=TINYINT},
       #{updateAmount,jdbcType=DECIMAL}, #{updateDate,jdbcType=TIMESTAMP})
   </insert>
-  <insert id="insertSelective" parameterType="com.leozz.entity.PointRecord" >
-    insert into point_record
-    <trim prefix="(" suffix=")" suffixOverrides="," >
-      <if test="id != null" >
-        id,
-      </if>
-      <if test="orderId != null" >
-        order_id,
-      </if>
-      <if test="cause != null" >
-        cause,
-      </if>
-      <if test="updateAmount != null" >
-        update_amount,
-      </if>
-      <if test="updateDate != null" >
-        update_date,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides="," >
-      <if test="id != null" >
-        #{id,jdbcType=BIGINT},
-      </if>
-      <if test="orderId != null" >
-        #{orderId,jdbcType=BIGINT},
-      </if>
-      <if test="cause != null" >
-        #{cause,jdbcType=TINYINT},
-      </if>
-      <if test="updateAmount != null" >
-        #{updateAmount,jdbcType=DECIMAL},
-      </if>
-      <if test="updateDate != null" >
-        #{updateDate,jdbcType=TIMESTAMP},
-      </if>
-    </trim>
-  </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.PointRecord" >
+    <insert id="insertSelective" parameterType="com.leozz.entity.PointRecord">
+        insert into point_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="activityId != null">
+                activity_id,
+            </if>
+            <if test="userId != null">
+                user_id,
+            </if>
+            <if test="cause != null">
+                cause,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="updateAmount != null">
+                update_amount,
+            </if>
+            <if test="updateDate != null">
+                update_date,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="activityId != null">
+                #{activityId,jdbcType=BIGINT},
+            </if>
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="cause != null">
+                #{cause,jdbcType=TINYINT},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=TINYINT},
+            </if>
+            <if test="updateAmount != null">
+                #{updateAmount,jdbcType=DECIMAL},
+            </if>
+            <if test="updateDate != null">
+                #{updateDate,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.PointRecord">
+        update point_record
+        <set>
+            <if test="activityId != null">
+                activity_id = #{activityId,jdbcType=BIGINT},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="cause != null">
+                cause = #{cause,jdbcType=TINYINT},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=TINYINT},
+            </if>
+            <if test="updateAmount != null">
+                update_amount = #{updateAmount,jdbcType=DECIMAL},
+            </if>
+            <if test="updateDate != null">
+                update_date = #{updateDate,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.leozz.entity.PointRecord">
     update point_record
-    <set >
-      <if test="orderId != null" >
-        order_id = #{orderId,jdbcType=BIGINT},
-      </if>
-      <if test="cause != null" >
-        cause = #{cause,jdbcType=TINYINT},
-      </if>
-      <if test="updateAmount != null" >
-        update_amount = #{updateAmount,jdbcType=DECIMAL},
-      </if>
-      <if test="updateDate != null" >
-        update_date = #{updateDate,jdbcType=TIMESTAMP},
-      </if>
-    </set>
-    where id = #{id,jdbcType=BIGINT}
-  </update>
-  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.PointRecord" >
-    update point_record
-    set order_id = #{orderId,jdbcType=BIGINT},
+    set activity_id = #{activityId,jdbcType=BIGINT},
+     user_id = #{userId,jdbcType=BIGINT},
       cause = #{cause,jdbcType=TINYINT},
+      status = #{status,jdbcType=TINYINT},
       update_amount = #{updateAmount,jdbcType=DECIMAL},
       update_date = #{updateDate,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
+    <update id="deductUserPointByEntity" parameterType="com.leozz.entity.PointRecord">
+        update point_record
+        set
+        status = #{status,jdbcType=TINYINT},
+        update_date = #{updateDate,jdbcType=TIMESTAMP}
+        where
+        activity_id=#{activityId,jdbcType=BIGINT}
+        and user_id=#{userId,jdbcType=BIGINT}
+        and cause=#{cause,jdbcType=TINYINT}
+    </update>
 </mapper>

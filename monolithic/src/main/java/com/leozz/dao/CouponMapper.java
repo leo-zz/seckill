@@ -1,7 +1,7 @@
 package com.leozz.dao;
 
-import com.leozz.dto.CouponDTO;
-import com.leozz.entity.Coupon;
+import com.leozz.dto.CouponTypeDTO;
+import com.leozz.entity.CouponType;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -11,15 +11,15 @@ import java.util.List;
 public interface CouponMapper {
     int deleteByPrimaryKey(Long id);
 
-    int insert(Coupon record);
+    int insert(CouponType record);
 
-    int insertSelective(Coupon record);
+    int insertSelective(CouponType record);
 
-    Coupon selectByPrimaryKey(Long id);
+    CouponType selectByPrimaryKey(Long id);
 
-    int updateByPrimaryKeySelective(Coupon record);
+    int updateByPrimaryKeySelective(CouponType record);
 
-    int updateByPrimaryKey(Coupon record);
+    int updateByPrimaryKey(CouponType record);
 
-    List<CouponDTO> selectUsableCouponByUserId(HashMap<String, Object> paramMap);
+    List<CouponTypeDTO> selectUsableCouponByUserId(HashMap<String, Object> paramMap);
 }

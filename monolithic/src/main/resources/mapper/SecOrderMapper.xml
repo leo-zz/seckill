@@ -25,7 +25,8 @@
         where id = #{id,jdbcType=BIGINT}
     </select>
 
-    <select id="selectOrderCountByUserAndActivity" parameterType="java.util.Map">
+    <!-- 返回类型一定要有-->
+    <select id="selectOrderCountByUserAndActivity" parameterType="java.util.Map" resultType="java.lang.Integer">
     select
     count(id)
     from seckill_order

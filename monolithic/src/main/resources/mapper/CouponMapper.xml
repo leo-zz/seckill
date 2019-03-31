@@ -1,51 +1,51 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.leozz.dao.CouponMapper" >
-  <resultMap id="BaseResultMap" type="com.leozz.entity.Coupon" >
+  <resultMap id="BaseResultMap" type="com.leozz.entity.CouponType" >
     <id column="id" property="id" jdbcType="BIGINT" />
-    <result column="type" property="type" jdbcType="TINYINT" />
+    <result column="category" property="category" jdbcType="TINYINT" />
     <result column="coupon_name" property="couponName" jdbcType="VARCHAR" />
     <result column="usage_limit" property="usageLimit" jdbcType="DECIMAL" />
     <result column="coupon_value" property="couponValue" jdbcType="DECIMAL" />
   </resultMap>
   <sql id="Base_Column_List" >
-    id, type, coupon_name, usage_limit, coupon_value
+    id, category, coupon_name, usage_limit, coupon_value
   </sql>
   <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
     select 
     <include refid="Base_Column_List" />
-    from coupon
+    from coupon_Type
     where id = #{id,jdbcType=BIGINT}
   </select>
-  <select id="selectUsableCouponByUserId" resultType="com.leozz.dto.CouponDTO" parameterType="java.util.Map" >
+  <select id="selectUsableCouponByUserId" resultType="com.leozz.dto.CouponTypeDTO" parameterType="java.util.Map" >
     select
-    ucr.id as recordId , c.id, c.type, c.coupon_name, c.usage_limit, c.coupon_value
-    from user_coupon_record ucr,coupon c
+    ucr.id as recordId , c.id, c.category, c.coupon_name, c.usage_limit, c.coupon_value
+    from user_coupon_record ucr,coupon_Type c
     where
-    ucr.coupon_id=c.id
+    ucr.coupon_type_id=c.id
     and ucr.user_id = #{userId}
     and  <![CDATA[  c.usage_limit < #{price} ]]>
     and ucr.`status`='0'
-    order by c.type desc ,c.coupon_value desc
+    order by c.category desc ,c.coupon_value desc
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
-    delete from coupon
+    delete from coupon_Type
     where id = #{id,jdbcType=BIGINT}
   </delete>
-  <insert id="insert" parameterType="com.leozz.entity.Coupon" >
-    insert into coupon (id, type, coupon_name, 
+  <insert id="insert" parameterType="com.leozz.entity.CouponType" >
+    insert into coupon_Type (id, category, coupon_name,
       usage_limit, coupon_value)
-    values (#{id,jdbcType=BIGINT}, #{type,jdbcType=TINYINT}, #{couponName,jdbcType=VARCHAR}, 
+    values (#{id,jdbcType=BIGINT}, #{category,jdbcType=TINYINT}, #{couponName,jdbcType=VARCHAR},
       #{usageLimit,jdbcType=DECIMAL}, #{couponValue,jdbcType=DECIMAL})
   </insert>
-  <insert id="insertSelective" parameterType="com.leozz.entity.Coupon" >
-    insert into coupon
+  <insert id="insertSelective" parameterType="com.leozz.entity.CouponType" >
+    insert into coupon_Type
     <trim prefix="(" suffix=")" suffixOverrides="," >
       <if test="id != null" >
         id,
       </if>
-      <if test="type != null" >
-        type,
+      <if test="category != null" >
+        category,
       </if>
       <if test="couponName != null" >
         coupon_name,
@@ -61,8 +61,8 @@
       <if test="id != null" >
         #{id,jdbcType=BIGINT},
       </if>
-      <if test="type != null" >
-        #{type,jdbcType=TINYINT},
+      <if test="category != null" >
+        #{category,jdbcType=TINYINT},
       </if>
       <if test="couponName != null" >
         #{couponName,jdbcType=VARCHAR},
@@ -75,11 +75,11 @@
       </if>
     </trim>
   </insert>
-  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.Coupon" >
-    update coupon
+  <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.CouponType" >
+    update coupon_Type
     <set >
-      <if test="type != null" >
-        type = #{type,jdbcType=TINYINT},
+      <if test="category != null" >
+        category = #{category,jdbcType=TINYINT},
       </if>
       <if test="couponName != null" >
         coupon_name = #{couponName,jdbcType=VARCHAR},
@@ -93,9 +93,9 @@
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
-  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.Coupon" >
-    update coupon
-    set type = #{type,jdbcType=TINYINT},
+  <update id="updateByPrimaryKey" parameterType="com.leozz.entity.CouponType" >
+    update coupon_Type
+    set category = #{category,jdbcType=TINYINT},
       coupon_name = #{couponName,jdbcType=VARCHAR},
       usage_limit = #{usageLimit,jdbcType=DECIMAL},
       coupon_value = #{couponValue,jdbcType=DECIMAL}

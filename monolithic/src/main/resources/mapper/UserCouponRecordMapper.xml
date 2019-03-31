@@ -3,15 +3,15 @@
 <mapper namespace="com.leozz.dao.UserCouponRecordMapper">
     <resultMap id="BaseResultMap" type="com.leozz.entity.UserCouponRecord">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="coupon_id" property="recordId" jdbcType="BIGINT"/>
+        <result column="coupon_type_id" property="couponTypeId" jdbcType="BIGINT"/>
         <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="status" property="status" jdbcType="TINYINT"/>
-        <result column="order_id" property="orderId" jdbcType="BIGINT"/>
+        <result column="activity_id" property="activityId" jdbcType="BIGINT"/>
         <result column="usage_date" property="usageDate" jdbcType="TIMESTAMP"/>
         <result column="pick_date" property="pickDate" jdbcType="TIMESTAMP"/>
     </resultMap>
     <sql id="Base_Column_List">
-    id, coupon_id, user_id, status, order_id, usage_date, pick_date
+    id, coupon_type_id, user_id, status, activity_id, usage_date, pick_date
   </sql>
     <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long">
         select
@@ -20,18 +20,19 @@
         where id = #{id,jdbcType=BIGINT}
     </select>
 
-    <select id="checkCouponIsUsable" parameterType="java.util.Map">
+    <select id="checkCouponIsUsable" parameterType="java.util.Map" resultType="java.lang.Integer">
     select count(id)
     from user_coupon_record
-    where id = #{couponId,jdbcType=BIGINT}
+    where id = #{recordId,jdbcType=BIGINT}
     and user_id = #{userId,jdbcType=BIGINT}
     and status = 0
   </select>
-    <select id="selectRecordsByOrderId" resultMap="BaseResultMap" parameterType="java.lang.Long">
+    <select id="selectRecordsByActivityId" resultMap="BaseResultMap" parameterType="java.util.Map">
         select
         <include refid="Base_Column_List"/>
         from user_coupon_record
-        where order_id = #{order_id,jdbcType=BIGINT}
+        where activity_id = #{activityId,jdbcType=BIGINT}
+        and user_id = #{userId,jdbcType=BIGINT}
     </select>
 
 
@@ -40,11 +41,11 @@
     where id = #{id,jdbcType=BIGINT}
   </delete>
     <insert id="insert" parameterType="com.leozz.entity.UserCouponRecord">
-    insert into user_coupon_record (id, coupon_id, user_id, 
-      status, order_id, usage_date, 
+    insert into user_coupon_record (id, coupon_type_id, user_id, 
+      status, activity_id, usage_date, 
       pick_date)
-    values (#{id,jdbcType=BIGINT}, #{recordId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT},
-      #{status,jdbcType=TINYINT}, #{orderId,jdbcType=BIGINT}, #{usageDate,jdbcType=TIMESTAMP}, 
+    values (#{id,jdbcType=BIGINT}, #{couponTypeId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT},
+      #{status,jdbcType=TINYINT}, #{activityId,jdbcType=BIGINT}, #{usageDate,jdbcType=TIMESTAMP}, 
       #{pickDate,jdbcType=TIMESTAMP})
   </insert>
     <insert id="insertSelective" parameterType="com.leozz.entity.UserCouponRecord">
@@ -53,8 +54,8 @@
             <if test="id != null">
                 id,
             </if>
-            <if test="recordId != null">
-                coupon_id,
+            <if test="couponTypeId != null">
+                coupon_type_id,
             </if>
             <if test="userId != null">
                 user_id,
@@ -62,8 +63,8 @@
             <if test="status != null">
                 status,
             </if>
-            <if test="orderId != null">
-                order_id,
+            <if test="activityId != null">
+                activity_id,
             </if>
             <if test="usageDate != null">
                 usage_date,
@@ -76,8 +77,8 @@
             <if test="id != null">
                 #{id,jdbcType=BIGINT},
             </if>
-            <if test="recordId != null">
-                #{recordId,jdbcType=BIGINT},
+            <if test="couponTypeId != null">
+                #{couponTypeId,jdbcType=BIGINT},
             </if>
             <if test="userId != null">
                 #{userId,jdbcType=BIGINT},
@@ -85,8 +86,8 @@
             <if test="status != null">
                 #{status,jdbcType=TINYINT},
             </if>
-            <if test="orderId != null">
-                #{orderId,jdbcType=BIGINT},
+            <if test="activityId != null">
+                #{activityId,jdbcType=BIGINT},
             </if>
             <if test="usageDate != null">
                 #{usageDate,jdbcType=TIMESTAMP},
@@ -99,8 +100,8 @@
     <update id="updateByPrimaryKeySelective" parameterType="com.leozz.entity.UserCouponRecord">
         update user_coupon_record
         <set>
-            <if test="recordId != null">
-                coupon_id = #{recordId,jdbcType=BIGINT},
+            <if test="couponTypeId != null">
+                coupon_type_id = #{couponTypeId,jdbcType=BIGINT},
             </if>
             <if test="userId != null">
                 user_id = #{userId,jdbcType=BIGINT},
@@ -108,8 +109,8 @@
             <if test="status != null">
                 status = #{status,jdbcType=TINYINT},
             </if>
-            <if test="orderId != null">
-                order_id = #{orderId,jdbcType=BIGINT},
+            <if test="activityId != null">
+                activity_id = #{activityId,jdbcType=BIGINT},
             </if>
             <if test="usageDate != null">
                 usage_date = #{usageDate,jdbcType=TIMESTAMP},
@@ -122,18 +123,21 @@
     </update>
     <update id="updateByPrimaryKey" parameterType="com.leozz.entity.UserCouponRecord">
     update user_coupon_record
-    set coupon_id = #{recordId,jdbcType=BIGINT},
+    set coupon_type_id = #{couponTypeId,jdbcType=BIGINT},
       user_id = #{userId,jdbcType=BIGINT},
       status = #{status,jdbcType=TINYINT},
-      order_id = #{orderId,jdbcType=BIGINT},
+      activity_id = #{activityId,jdbcType=BIGINT},
       usage_date = #{usageDate,jdbcType=TIMESTAMP},
       pick_date = #{pickDate,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
     <update id="updateStatusById" parameterType="java.util.Map">
         update user_coupon_record
-        set status = #{statu},
-        where id = #{id,jdbcType=BIGINT}
+        set status = #{status}
+        <if test="activityId != null and activityId !=''">
+            ,activity_id = #{activityId,jdbcType=BIGINT}
+        </if>
+        where id = #{recordId,jdbcType=BIGINT}
     </update>
 
 </mapper>

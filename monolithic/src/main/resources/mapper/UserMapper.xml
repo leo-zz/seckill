@@ -152,7 +152,10 @@
   </update>
   <update id="updateBlockedPointById" parameterType="java.util.Map" >
     update user
-    set blocked_membership_point = #{blockedPoint,jdbcType=INTEGER},
+    set blocked_membership_point = #{blockedPoint,jdbcType=INTEGER}
+    <if test="membershipPoint != null and membershipPoint!=''" >
+      ,membership_point = #{membershipPoint,jdbcType=INTEGER}
+    </if>
     where id = #{userId,jdbcType=BIGINT}
   </update>
 
