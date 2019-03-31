@@ -15,7 +15,7 @@ public class PreSubmitOrderDTO {
 
     //秒杀活动信息，商品信息省略
     private Long countDownTime;   //倒计时，单位是ms
-    private int stockPercent;   //库存百分比
+    private byte stockPercent;   //库存百分比
 
     //收件人信息
     private DeliveryAddr deliveryAddr;
@@ -61,11 +61,11 @@ public class PreSubmitOrderDTO {
         this.countDownTime = countDownTime;
     }
 
-    public int getStockPercent() {
+    public byte getStockPercent() {
         return stockPercent;
     }
 
-    public void setStockPercent(int stockPercent) {
+    public void setStockPercent(byte stockPercent) {
         this.stockPercent = stockPercent;
     }
 

@@ -60,22 +60,22 @@ public class SecOrderServiceImpl implements SecOrderService {
         BigDecimal seckillPrice = secActivity.getSeckillPrice();
         long countDownTime = secActivity.getEndDate().getTime() - System.currentTimeMillis();
         preSubmitOrderDTO.setCountDownTime(countDownTime > 0 ? countDownTime : 0);
-        Integer seckillCount = secActivity.getSeckillCount();
-        Integer seckillStock = secActivity.getSeckillStock();
-        Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
-        preSubmitOrderDTO.setStockPercent((seckillStock-seckillBlockedStock)*100/seckillCount);
+        preSubmitOrderDTO.setStockPercent(secActivityService.calcStockPercent(secActivity));
 
         //商品信息省略，页面传递即可，无需从接口再次获取。
         // Goods goods = activitiesLocalCache.getGoodsByActivityId(secActivityId);
-
         //收件人信息（每个用户都不一样的信息直接从数据库拿，下同）
         DeliveryAddr addr = deliveryAddrMapper.selectDefaultByUserId(userId);
-
+        if(addr==null){
+            throw new RuntimeException("请先设置收货地址");
+        }
         preSubmitOrderDTO.setDeliveryAddr(addr);
 
         //优惠券信息（筛选满足条件的优惠券，按照优惠券类别和面额排序，面额大的放到前面）
         List<CouponTypeDTO> coupons = couponLocalCache.selectUsableCouponByUserId(userId, seckillPrice.doubleValue());
-        preSubmitOrderDTO.setCoupons(coupons);
+        if(coupons.size()>0){
+            preSubmitOrderDTO.setCoupons(coupons);
+        }
         //TODO 优惠券的使用推荐，一个大面额的优惠券可能没有两个小面额的优惠券优惠的金额大，前期让用户自己选择所使用的优惠券
         //积分信息
         User user = userLocalCache.selectUserById(userId);

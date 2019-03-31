@@ -9,6 +9,7 @@ import com.leozz.util.FlowLimiter;
 import com.leozz.util.TimeRecorder;
 import com.leozz.util.cache.ActivitiesLocalCache;
 import com.leozz.util.cache.OrderLocalCache;
+import io.swagger.models.auth.In;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -59,58 +60,7 @@ public class SecActivityServiceImpl implements SecActivityService {
         if (secActivity == null) {
             return new ResultDTO(false, "活动不存在");
         }
-        //增加活动状态的检测，只有抢购中状态下的商品能够继续操作
-        long startTime = secActivity.getStartDate().getTime();
-        long endTime = secActivity.getEndDate().getTime();
-        long now = TimeRecorder.accessTime.get();
-
-        if (now < startTime) {
-            //可以跟进此行为辨识用户是否借助软件秒杀
-            return new ResultDTO(false, "活动未开始");
-        } else if (now >= endTime) {
-            return new ResultDTO(false, "活动已结束");
-        } else {
-            Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
-            Integer seckillStock = secActivity.getSeckillStock();
-
-            int saleableCount = seckillStock - seckillBlockedStock;
-            if (saleableCount > 0) {
-                //"抢购中"
-                // 当前用户是否参与过此活动，一次秒杀活动中，同一个用户只能参与一次。
-                boolean b = secActivityService.hasUserPartaked(secActivityId, userId);
-                if (b) {
-                    //如果用户已参与过，则给活动增加已参与标签。
-                    return new ResultDTO(false, "只能参与一次。");
-                }
-                // 使用漏桶算法进行限流，允许秒杀商品梳理3倍的人数参与抢购，比如100件商品最多允许300人进入下单页面
-                Integer seckillCount = secActivity.getSeckillCount();
-                Semaphore limiter = flowLimiter.getLimiter(secActivityId, seckillCount);
-                try {
-                    limiter.acquire();
-                    // 重新检查秒杀活动的状态
-                    //活动的状态如何能及时更新？
-                    //TODO 如何处理并发问题？对活动加锁。
-                    synchronized (secActivity) {
-                        //重新获取库存
-                        secActivity = activitiesLocalCache.getSecActivityById(secActivityId);
-                        Integer stockCount = secActivity.getSeckillCount();
-                        Integer blockedStockCount = secActivity.getSeckillBlockedStock();
-                        if (stockCount > blockedStockCount) {
-                            return new ResultDTO(true);
-                        } else {
-                            return new ResultDTO(false, "已抢完");
-                        }
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    return new ResultDTO(false, "活动太火爆，请稍后重试");
-                }
-            } else if (seckillBlockedStock > 0) {
-                return new ResultDTO(false, "活动火爆，请重试");
-            }else{
-                return new ResultDTO(false, "商品已售完");
-            }
-        }
+        return checkActivityStatusAndStock(userId, secActivity);
     }
 
 
@@ -177,13 +127,11 @@ public class SecActivityServiceImpl implements SecActivityService {
         Long activityId=secActivity.getId();
         Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
         Integer seckillStock = secActivity.getSeckillStock();
-        Integer seckillCount = secActivity.getSeckillCount();
 
         int saleableCount = seckillStock - seckillBlockedStock;
 
         //TODO 如果库存显示要求不精确的，可以不用每次都计算。
-        Integer stockPercent = ((saleableCount * 100) / seckillCount);
-        secActivityDTO.setStockPercent(stockPercent.byteValue());
+        secActivityDTO.setStockPercent(calcStockPercent(secActivity));
 
         long startTime = secActivity.getStartDate().getTime();
         long endTime = secActivity.getEndDate().getTime();
@@ -217,4 +165,90 @@ public class SecActivityServiceImpl implements SecActivityService {
         }
     }
 
+    /**
+     * 检查活动状态是否在抢购中，如果在抢购中则检查活动库存是否充足，此处使用了限流器防止服务器流量过大。
+     * @param userId
+     * @param secActivity
+     * @return
+     */
+    private ResultDTO checkActivityStatusAndStock(Long userId, SecActivity secActivity) {
+        //增加活动状态的检测，只有抢购中状态下的商品能够继续操作
+        long startTime = secActivity.getStartDate().getTime();
+        long endTime = secActivity.getEndDate().getTime();
+        long now = TimeRecorder.accessTime.get();
+
+        Long secActivityId=secActivity.getId();
+
+        if (now < startTime) {
+            //可以跟进此行为辨识用户是否借助软件秒杀
+            return new ResultDTO(false, "活动未开始");
+        } else if (now >= endTime) {
+            return new ResultDTO(false, "活动已结束");
+        } else {
+            Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
+            Integer seckillStock = secActivity.getSeckillStock();
+
+            int saleableCount = seckillStock - seckillBlockedStock;
+            if (saleableCount > 0) {
+                //"抢购中"
+                // 当前用户是否参与过此活动，一次秒杀活动中，同一个用户只能参与一次。
+                boolean b = secActivityService.hasUserPartaked(secActivityId, userId);
+                if (b) {
+                    //如果用户已参与过，则给活动增加已参与标签。
+                    return new ResultDTO(false, "只能参与一次。");
+                }
+                return checkStockByLimiter(secActivity);
+
+            } else if (seckillBlockedStock > 0) {
+                return new ResultDTO(false, "活动火爆，请重试");
+            }else{
+                return new ResultDTO(false, "商品已售完");
+            }
+        }
+    }
+
+    /**
+     * 检查活动库存是否充足，此处使用了限流器防止服务器流量过大
+     * @param secActivity
+     * @return
+     */
+    private ResultDTO checkStockByLimiter(SecActivity secActivity) {
+        // 使用漏桶算法进行限流，允许秒杀商品梳理3倍的人数参与抢购，比如100件商品最多允许300人进入下单页面
+        Integer seckillCount = secActivity.getSeckillCount();
+        long secActivityId=secActivity.getId();
+        Semaphore limiter = flowLimiter.getLimiter(secActivityId, seckillCount);
+        try {
+            limiter.acquire();
+            // 重新检查秒杀活动的状态
+            //活动的状态如何能及时更新？
+            //TODO 如何处理并发问题？对活动加锁。
+            synchronized (secActivity) {
+                //重新获取库存
+                secActivity = activitiesLocalCache.getSecActivityById(secActivityId);
+                Integer stockCount = secActivity.getSeckillCount();
+                Integer blockedStockCount = secActivity.getSeckillBlockedStock();
+                if (stockCount > blockedStockCount) {
+                    return new ResultDTO(true);
+                } else {
+                    return new ResultDTO(false, "已抢完");
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return new ResultDTO(false, "活动太火爆，请稍后重试");
+        }
+    }
+
+    /**
+     * 计算活动的可卖库存百分比
+     * @param secActivity
+     * @return
+     */
+    public byte calcStockPercent(SecActivity secActivity) {
+        Integer seckillCount = secActivity.getSeckillCount();
+        Integer seckillStock = secActivity.getSeckillStock();
+        Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
+        Integer i = (seckillStock - seckillBlockedStock) * 100 / seckillCount;
+        return i.byteValue();
+    }
 }

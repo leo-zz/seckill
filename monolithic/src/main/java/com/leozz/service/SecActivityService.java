@@ -61,4 +61,6 @@ public interface SecActivityService {
      * @return true表示用户已经下单，flase表示用户未下单
      */
     boolean hasUserPartaked(Long activityId, Long userId);
+
+    byte calcStockPercent(SecActivity secActivity);
 }

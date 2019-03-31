@@ -73,15 +73,13 @@ public class SecActivityListController {
         if (userId == null) {
             return new PreSubmitOrderDTO(false, "请先登录");
         }
-        PreSubmitOrderDTO preSubmitOrderDTO = null;
         //尝试参与秒杀活动
         ResultDTO resultDTO = secActivityService.partakeSecActivity(secActivityId, userId);
         if (resultDTO.isResult()) {
             //将用户当前参与的秒杀活动放入session
             session.setAttribute("secActivityId", secActivityId);
             //获取预下单页面的信息
-            preSubmitOrderDTO = secOrderService.preSubmitOrder(secActivityId, userId);
-            return preSubmitOrderDTO;
+            return secOrderService.preSubmitOrder(secActivityId, userId);
         } else {
             return new PreSubmitOrderDTO(false, resultDTO.getMsg());
         }
