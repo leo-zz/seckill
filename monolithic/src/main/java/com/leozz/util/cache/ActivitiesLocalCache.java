@@ -130,9 +130,9 @@ public class ActivitiesLocalCache {
                     //刷新商品信息
                     if (!goodsMapBack.containsKey(goodsId)) {
                         if (goodsMap.containsKey(goodsId)) {
-                            goodsMapBack.put(id, goodsMap.get(id));
+                            goodsMapBack.put(goodsId, goodsMap.get(goodsId));
                         } else {
-                            goodsMapBack.put(id, goodsMapper.selectByPrimaryKey(id));
+                            goodsMapBack.put(goodsId, goodsMapper.selectByPrimaryKey(goodsId));
                         }
                     }
 
