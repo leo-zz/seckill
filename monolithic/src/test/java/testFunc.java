@@ -12,6 +12,30 @@ import java.util.concurrent.CountDownLatch;
  */
 public class testFunc {
 
+
+    @Test
+    public void testBigDemicRef(){
+        //1、不要使用double类型的值创建BigDecimal，尽量使用字符串类型。
+        BigDecimal b = new BigDecimal("1.12");
+        BigDecimal bd = new BigDecimal(1.12);
+        System.out.println(b);
+        System.out.println(bd);
+
+        //2、BigDecimal的值是final不可变的，类似String，因此其subtract方法不会对b本身的值造成影响。
+        BigDecimal c = b.subtract(new BigDecimal("0.10"));
+        System.out.println(b);
+        System.out.println(c);
+
+        //3、BigDecimal作为传入参数效果是值传递，不是引用传递。
+        BigDecimal d = subTest(b, "0.01");
+        System.out.println(b);
+        System.out.println(d);
+    }
+
+    private BigDecimal  subTest(BigDecimal b,String d){
+        return b.subtract(new BigDecimal(d));
+    }
+
     @Test
     //测试Integer到byte类型的转换
     public void testIntegerConvertToByte() {
