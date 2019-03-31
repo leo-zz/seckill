@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Date;
 
 /**
  * @Author: leo-zz
@@ -43,6 +44,8 @@ public class LoginController {
 
         if (password.equals(password)) {
             session.setAttribute("userId", userId);
+            //更新用户的登录信息
+            userLocalCache.updateUserLoginStateById(userId);
             return new ResultDTO(true, "登录成功");
         } else {
             return new ResultDTO(false, "密码错误");

@@ -5,14 +5,17 @@ import com.leozz.dto.ResultDTO;
 import com.leozz.dto.SecActivityDTO;
 import com.leozz.service.SecActivityService;
 import com.leozz.service.SecOrderService;
+import com.leozz.util.TimeRecorder;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.sql.Time;
 import java.util.List;
 
 /**
@@ -37,6 +40,7 @@ public class SecActivityListController {
     @ApiOperation(value = "获取秒杀活动列表", notes = "需要从session中拿取userId")
     @RequestMapping("/list")
     public ResultDTO<List<SecActivityDTO>> getSecActivityList(HttpServletRequest request) {
+        TimeRecorder.accessTime.set(System.currentTimeMillis());
         HttpSession session = request.getSession();
         Long userId = (Long) session.getAttribute("userId");
         //判断用户是否登录
@@ -44,8 +48,7 @@ public class SecActivityListController {
             return new ResultDTO<List<SecActivityDTO>>(false, "请先登录");
         }
         //根据userId获取秒杀活动列表，是否要通过mybatis关联查询？
-        List<SecActivityDTO> secActivityList = secActivityService.getSecActivityList(userId);
-        return new ResultDTO<List<SecActivityDTO>>(true, secActivityList, "获取成功");
+        return  secActivityService.getSecActivityList(userId);
     }
 
     /**
@@ -55,13 +58,15 @@ public class SecActivityListController {
      * @return 下单页需要的数据
      */
     @ApiOperation(value = "参与秒杀活动", notes = "从访问路径中拿取活动id，从session中拿取userId")
-    @RequestMapping("/partake/{secActivityId}")
-    public ResultDTO<PreSubmitOrderDTO> partakeSecActivity(HttpServletRequest request, @PathVariable Long secActivityId) {
+    @RequestMapping("/partake")
+    public PreSubmitOrderDTO partakeSecActivity(HttpServletRequest request, @RequestParam Long secActivityId) {
+        //将访问的时间戳保存到threadLocal中，以便于跨方法访问同一个变量
+        TimeRecorder.accessTime.set(System.currentTimeMillis());
         HttpSession session = request.getSession();
         Long userId = (Long) session.getAttribute("userId");
         //判断用户是否登录
         if (userId == null) {
-            return new ResultDTO<PreSubmitOrderDTO>(false, "请先登录");
+            return new PreSubmitOrderDTO(false, "请先登录");
         }
         PreSubmitOrderDTO preSubmitOrderDTO = null;
         //尝试参与秒杀活动
@@ -71,9 +76,9 @@ public class SecActivityListController {
             session.setAttribute("secActivityId", secActivityId);
             //获取预下单页面的信息
             preSubmitOrderDTO = secOrderService.preSubmitOrder(secActivityId, userId);
+            return preSubmitOrderDTO;
         } else {
-            preSubmitOrderDTO = new PreSubmitOrderDTO(false, resultDTO.getMsg());
+            return  new PreSubmitOrderDTO(false, resultDTO.getMsg());
         }
-        return new ResultDTO<PreSubmitOrderDTO>(true,preSubmitOrderDTO,"预下单成功");
     }
 }
