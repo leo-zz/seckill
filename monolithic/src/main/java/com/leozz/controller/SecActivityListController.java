@@ -47,8 +47,13 @@ public class SecActivityListController {
         if (userId == null) {
             return new ResultDTO<List<SecActivityDTO>>(false, "请先登录");
         }
-        //根据userId获取秒杀活动列表，是否要通过mybatis关联查询？
-        return  secActivityService.getSecActivityList(userId);
+        try {
+            //根据userId获取秒杀活动列表
+            ResultDTO<List<SecActivityDTO>> secActivityList = secActivityService.getSecActivityList(userId);
+            return secActivityList;
+        } catch (Exception e) {
+            return new ResultDTO<List<SecActivityDTO>>(false, e.getMessage());
+        }
     }
 
     /**
@@ -78,7 +83,7 @@ public class SecActivityListController {
             preSubmitOrderDTO = secOrderService.preSubmitOrder(secActivityId, userId);
             return preSubmitOrderDTO;
         } else {
-            return  new PreSubmitOrderDTO(false, resultDTO.getMsg());
+            return new PreSubmitOrderDTO(false, resultDTO.getMsg());
         }
     }
 }

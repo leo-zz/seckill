@@ -57,7 +57,6 @@ public class ActivitiesLocalCache {
 
         if (secActivityMap == null) {
             //第一次获取列表时，刷新本地缓存
-            //
             secActivityList = secActivityMapper.selectRecentActivityList();
             secActivityMap = new ConcurrentHashMap<>(secActivityList.size());
             goodsMap = new ConcurrentHashMap<>(secActivityList.size());

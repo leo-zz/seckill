@@ -47,69 +47,10 @@ public class SecActivityServiceImpl implements SecActivityService {
         //TODO 使用缓存提升速度，使用定时任务更新秒杀活动的状态？
         List<SecActivity> secActivityList = activitiesLocalCache.getActivityList();
         if (secActivityList.size() <= 0) {
-            return new ResultDTO<List<SecActivityDTO>>(true, "目前没有秒杀活动");
+            throw new RuntimeException("目前没有秒杀活动");
         }
-        List<SecActivityDTO> secActivityDTOS = new ArrayList<>(secActivityList.size());
-
-        //遍历所有秒杀活动
-        for (SecActivity secActivity : secActivityList) {
-            SecActivityDTO secActivityDTO = new SecActivityDTO();
-            Long activityId = secActivity.getId();
-
-            //跟进商品id获取活动商品的信息
-            Goods goods = activitiesLocalCache.getGoodsByActivityId(secActivity.getGoodsId());
-            if (goods == null) {
-                return new ResultDTO<List<SecActivityDTO>>(false, "商品信息错误");
-            }
-            secActivityDTO.setActivityId(secActivity.getId());
-            secActivityDTO.setGoodsImg(goods.getGoodsImg());
-            secActivityDTO.setGoodsPrice(goods.getGoodsPrice().doubleValue());
-            secActivityDTO.setGoodsTitle(goods.getGoodsTitle());
-            secActivityDTO.setSeckillPrice(secActivity.getSeckillPrice().doubleValue());
-
-            Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
-            Integer seckillStock = secActivity.getSeckillStock();
-            Integer seckillCount = secActivity.getSeckillCount();
-
-            int saleableCount = seckillStock - seckillBlockedStock;
-
-            //TODO 如果库存显示要求不精确的，可以不用每次都计算。
-            Integer stockPercent = ((saleableCount * 100) / seckillCount);
-            secActivityDTO.setStockPercent(stockPercent.byteValue());
-
-            long startTime = secActivity.getStartDate().getTime();
-            long endTime = secActivity.getEndDate().getTime();
-            long now = TimeRecorder.accessTime.get();
-            if (now < startTime) {
-                secActivityDTO.setButtonContent("未开始");
-                secActivityDTO.setClickable(false);
-            } else if (now >= endTime) {
-                secActivityDTO.setButtonContent("已结束");
-                secActivityDTO.setClickable(false);
-            } else {
-                if (saleableCount > 0) {
-                    //一次秒杀活动中，同一个用户只能参与一次。
-                    boolean b = secActivityService.hasUserPartaked(activityId, userId);
-                    if (b) {
-                        //如果用户已参与过，则给活动增加已参与标签。
-                        secActivityDTO.setButtonContent("已参与");
-                        secActivityDTO.setClickable(false);
-                    } else {
-                        secActivityDTO.setButtonContent("抢购中");
-                        secActivityDTO.setClickable(true);
-                    }
-                } else if (seckillBlockedStock > 0) {
-                    secActivityDTO.setButtonContent("有用户未付款，还有机会，请刷新");
-                    secActivityDTO.setClickable(false);
-                } else {
-                    secActivityDTO.setButtonContent("已结束");
-                    secActivityDTO.setClickable(false);
-                }
-
-            }
-            secActivityDTOS.add(secActivityDTO);
-        }
-        return new ResultDTO<List<SecActivityDTO>>(true, secActivityDTOS, "获取成功");
+        List<SecActivityDTO> activityDTOS = getSecActivityDTOByEntity(userId, secActivityList);
+        return new ResultDTO<List<SecActivityDTO>>(true,activityDTOS, "获取成功");
     }
 
     @Override
@@ -180,7 +121,6 @@ public class SecActivityServiceImpl implements SecActivityService {
         return orderLocalCache.selectByUserAndActivity(activityId, userId);
     }
 
-
     @Override
     public boolean checkSecActivityStatusAndStock(Long secActivityId, Long userId) {
         return false;
@@ -196,5 +136,85 @@ public class SecActivityServiceImpl implements SecActivityService {
         return false;
     }
 
+    /**
+     * 遍历活动列表，生成页面需要的DTO
+     * @param userId
+     * @param secActivityList
+     * @return
+     */
+    private List<SecActivityDTO> getSecActivityDTOByEntity(Long userId, List<SecActivity> secActivityList) {
+        List<SecActivityDTO> secActivityDTOS = new ArrayList<>(secActivityList.size());
+
+        //遍历所有秒杀活动
+        for (SecActivity secActivity : secActivityList) {
+            SecActivityDTO secActivityDTO = new SecActivityDTO();
+            Long activityId = secActivity.getId();
+
+            //跟进商品id获取活动商品的信息
+            Goods goods = activitiesLocalCache.getGoodsByActivityId(secActivity.getGoodsId());
+            if (goods == null) {
+                throw new RuntimeException("商品信息错误");
+            }
+            secActivityDTO.setActivityId(activityId);
+            secActivityDTO.setGoodsImg(goods.getGoodsImg());
+            secActivityDTO.setGoodsPrice(goods.getGoodsPrice().doubleValue());
+            secActivityDTO.setGoodsTitle(goods.getGoodsTitle());
+            secActivityDTO.setSeckillPrice(secActivity.getSeckillPrice().doubleValue());
+
+            setActivityStatusAndStock(userId, secActivity, secActivityDTO);
+            secActivityDTOS.add(secActivityDTO);
+        }
+        return secActivityDTOS;
+    }
+
+    /**
+     * 计算活动库存百分比，推断活动状态，并注入到secActivityDTO中。
+     * @param userId
+     * @param secActivity
+     * @param secActivityDTO
+     */
+    private void setActivityStatusAndStock(Long userId, SecActivity secActivity, SecActivityDTO secActivityDTO) {
+        Long activityId=secActivity.getId();
+        Integer seckillBlockedStock = secActivity.getSeckillBlockedStock();
+        Integer seckillStock = secActivity.getSeckillStock();
+        Integer seckillCount = secActivity.getSeckillCount();
+
+        int saleableCount = seckillStock - seckillBlockedStock;
+
+        //TODO 如果库存显示要求不精确的，可以不用每次都计算。
+        Integer stockPercent = ((saleableCount * 100) / seckillCount);
+        secActivityDTO.setStockPercent(stockPercent.byteValue());
+
+        long startTime = secActivity.getStartDate().getTime();
+        long endTime = secActivity.getEndDate().getTime();
+        long now = TimeRecorder.accessTime.get();
+        if (now < startTime) {
+            secActivityDTO.setButtonContent("未开始");
+            secActivityDTO.setClickable(false);
+        } else if (now >= endTime) {
+            secActivityDTO.setButtonContent("已结束");
+            secActivityDTO.setClickable(false);
+        } else {
+            if (saleableCount > 0) {
+                //一次秒杀活动中，同一个用户只能参与一次。
+                boolean b = secActivityService.hasUserPartaked(activityId, userId);
+                if (b) {
+                    //如果用户已参与过，则给活动增加已参与标签。
+                    secActivityDTO.setButtonContent("已参与");
+                    secActivityDTO.setClickable(false);
+                } else {
+                    secActivityDTO.setButtonContent("抢购中");
+                    secActivityDTO.setClickable(true);
+                }
+            } else if (seckillBlockedStock > 0) {
+                secActivityDTO.setButtonContent("有用户未付款，还有机会，请刷新");
+                secActivityDTO.setClickable(false);
+            } else {
+                secActivityDTO.setButtonContent("已结束");
+                secActivityDTO.setClickable(false);
+            }
+
+        }
+    }
 
 }
