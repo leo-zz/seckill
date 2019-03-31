@@ -42,7 +42,7 @@ public class LoginController {
             return new ResultDTO(false, "账号不存在");
         }
 
-        if (password.equals(password)) {
+        if (password.equals(user.getPassword())) {
             session.setAttribute("userId", userId);
             //更新用户的登录信息
             userLocalCache.updateUserLoginStateById(userId);
