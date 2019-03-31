@@ -1,9 +1,7 @@
 package com.leozz.controller;
 
-import com.leozz.dto.PreSubmitOrderDTO;
 import com.leozz.dto.ResultDTO;
 import com.leozz.dto.SubmitDTO;
-import com.leozz.entity.SecOrder;
 import com.leozz.service.SecOrderService;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.util.concurrent.Executors;
 
 /**
  * @Author: leo-zz
@@ -60,12 +57,10 @@ public class SecOrderController {
             return new ResultDTO(false, "请先登录");
         }
         try{
-            ResultDTO resultDTO = secOrderService.paytheOrder(orderId, userId);
-            return resultDTO;
+            return secOrderService.paytheOrder(orderId, userId);
         }catch (Exception e){
             return  new ResultDTO(false,e.getMessage());
         }
-
     }
 
     //取消订单
@@ -77,7 +72,14 @@ public class SecOrderController {
         if (userId == null) {
             return new ResultDTO(false, "请先登录");
         }
-        return secOrderService.cancletheOrder(orderId, userId);
+        try{
+            return secOrderService.cancleOrder(orderId, userId);
+        }catch (Exception e){
+            return  new ResultDTO(false,e.getMessage());
+        }
+
+
+
     }
 
 }

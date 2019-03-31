@@ -107,4 +107,14 @@ public class CouponLocalCache {
     public int deductCouponById(Long recordId, Long userId) {
         return checkAndUpdateCouponById(recordId, userId, 0l, 2);
     }
+
+    /**
+     * 取消冻结优惠券
+     * @param couponId
+     * @param userId
+     * @return
+     */
+    public int unfrozenCouponById(Long couponId, Long userId) {
+        return checkAndUpdateCouponById(couponId, userId, 0l, 0);
+    }
 }

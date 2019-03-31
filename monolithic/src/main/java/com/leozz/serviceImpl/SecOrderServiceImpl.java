@@ -114,7 +114,7 @@ public class SecOrderServiceImpl implements SecOrderService {
         blockActivityStock(secActivity);
 
         // 2.冻结优惠券（优惠券服务）
-        seckillPrice = frozenCouponById(submitDTO, secOrderDto, seckillPrice);
+        seckillPrice = frozenCoupon(submitDTO, secOrderDto, seckillPrice);
 
         // 3.冻结积分（用户服务）
         seckillPrice = frozenUserPoint(submitDTO, secOrderDto, seckillPrice);
@@ -127,107 +127,170 @@ public class SecOrderServiceImpl implements SecOrderService {
                     "收到的订单金额为：" + orderAmount + "，系统计算订单金额为：" + seckillPrice);
         }
         // 5.保存并返回订单DTO
-        return getLongResultDTO(submitDTO, secOrderDto, seckillPrice);
+        return saveAndReturnOrderId(submitDTO, secOrderDto, seckillPrice);
     }
-
 
 
     @Override
     @Transactional
     public ResultDTO paytheOrder(long orderId, Long userId1) {
-        SecOrderDto order = orderLocalCache.getSecOrderDtoById(orderId);
-        if (order.getStatus() > 0) {
-            throw new RuntimeException("订单状态错误");
-        }
+        //0.检查订单状态
+        SecOrderDto order = getAndCheckOrder(orderId);
+        Long activityId = order.getActivityId();
+        //1.检查账号信息是否一致
         Long userId = order.getUserId();
-
         if (!userId.equals(userId1)) {
             throw new RuntimeException("账号信息不一致");
         }
 
-        double orderAmount = order.getAmount().doubleValue();//支付金额
-        //供支付渠道回调，更新订单支付状态。
-        Long activityId = order.getActivityId();
-        order.setStatus((byte) 1);
-        order.setPayDate(new Date());
-        int num = orderLocalCache.updateOrderById(orderId);
-        if (num != 1) {
-            throw new RuntimeException("订单支付失败");
-        }
+        //2.支付并更新订单状态
+        payAndUpdateOrder(orderId, order);
 
-        //扣除活动中的库存,对抢购活动加锁
-        SecActivity secActivity = activitiesLocalCache.getSecActivityById(activityId);
-        synchronized (secActivity) {
-            Integer stockCount = secActivity.getSeckillStock();
-            Integer blockedStockCount = secActivity.getSeckillBlockedStock();
-            if (stockCount >= blockedStockCount & blockedStockCount > 0) {
-                // （公共数据）先在本地缓存中冻结库存，
-                secActivity.setSeckillStock(--stockCount);//扣减库存
-                secActivity.setSeckillBlockedStock(--blockedStockCount);//扣减冻结库存
-            } else {
-                throw new RuntimeException("商品库存出现异常");
-            }
-            //判断活动是否抢完
-            if (stockCount == 0) {
-                secActivity.setEndDate(new Date()); //记录活动的持续时间，便于分析数据
-            }
-            // 批量提交到数据库,考虑是否可以拿到同步范围外面
-            activitiesLocalCache.updateAfterPayOrder(activityId);
-        }
+        //3.扣除活动中的库存,对抢购活动加锁，以防止超卖
+        deductStockAndUpdateActivity(activityId);
 
-        //扣除优惠券
-        if (order.getCouponUsage()) {
-            Long fullrangeCouponId = order.getFullrangeCouponId();
-            if (fullrangeCouponId > 0) {
-                int i = couponLocalCache.deductCouponById(fullrangeCouponId, userId);
-                if (i != 1) {
-                    throw new RuntimeException("全品类优惠券不存在");
-                }
-            }
-            Long couponId = order.getCouponId();
-            if (couponId > 0) {
-                int i = couponLocalCache.deductCouponById(couponId, userId);
-                if (i != 1) {
-                    throw new RuntimeException("单品优惠券不存在");
-                }
-            }
-        }
-        //扣除积分
-        if (order.getPointUsage()) {
+        //4.扣除优惠券
+        deductCoupons(order, userId);
 
-            Integer usedPoint = order.getUsedPoint();
-            User user = userLocalCache.selectUserById(userId);
-            Integer point = user.getMembershipPoint();
-            Integer blockedPoint = user.getBlockedMembershipPoint();
-            if (point >= blockedPoint & blockedPoint >= usedPoint) {
-                user.setMembershipPoint(point - usedPoint);
-                user.setBlockedMembershipPoint(blockedPoint - usedPoint);
+        //5.扣除积分
+        deductUserPoint(order, activityId, userId);
 
-                PointRecord record = new PointRecord();
-                record.setActivityId(activityId);
-                record.setUserId(userId);
-                record.setCause((byte) 1);//购物扣除积分
+        //6.创建运单，不是必须要实时反馈，可以异步执行。
+        wayBillService.createWayBill(order);
 
-                record.setStatus((byte) 1);
-                record.setUpdateDate(new Date());
+        //7.返还购物奖励积分（通常是在确认收货时进行）和优惠券。
 
-                userLocalCache.deductUserPointById(userId, record);
-            } else {
-                throw new RuntimeException("用户积分不足");
-            }
-        }
-        //创建运单，不是必须要实时反馈，可以异步执行。
-        //创建失败的话不用回滚订单，物流单可以通过MQ确保创建成功，
-        boolean wayBill = wayBillService.createWayBill(order);
-        if (!wayBill) {
-            return new ResultDTO(false, "物流单创建失败");
-        }
         return new ResultDTO(true, "订单支付成功");
     }
 
+
     @Override
-    public ResultDTO cancletheOrder(long orderId, Long userId) {
-        return null;
+    /**
+     * 取消订单，是提交订单的逆过程
+     */
+    @Transactional
+    public ResultDTO cancleOrder(long orderId, Long userId1) {
+        //0,检查订单状态
+        SecOrderDto order = getAndCheckOrder(orderId);
+        Long activityId = order.getActivityId();
+
+        //1.检查账号信息是否一致
+        Long userId = order.getUserId();
+        if (!userId.equals(userId1)) {
+            throw new RuntimeException("账号信息不一致");
+        }
+
+        //2.取消冻结库存
+        unBlockActivityStock(activityId);
+
+        //3.取消冻结优惠券
+        unFrozenCoupon(order, userId);
+
+        //4.取消冻结积分
+        unFrozenUserPoint(order, activityId, userId);
+
+        //5.更新订单状态
+        return cancelAndUpdateOrder(order);
+    }
+
+    /**
+     * 更新订单状态
+     * @param order
+     * @return
+     */
+    private ResultDTO cancelAndUpdateOrder(SecOrderDto order) {
+        order.setStatus((byte) 4);
+        int num = orderLocalCache.updateOrderById(order.getId());
+        if (num == 1) {
+            return new ResultDTO(true, "订单取消成功");
+        } else {
+            //TODO 回滚库存冻结、优惠券冻结、积分冻结、订单插入缓存等
+            throw new RuntimeException("订单取消失败");
+        }
+    }
+
+    /**
+     * 取消冻结积分
+     * @param order
+     * @param activityId
+     * @param userId
+     */
+    private void unFrozenUserPoint(SecOrderDto order, Long activityId, Long userId) {
+        //检查订单是否使用用户积分
+        if(!order.getPointUsage())return;
+
+        User user = userLocalCache.selectUserById(userId);
+        int usedPoint = order.getUsedPoint();
+        if (usedPoint > 0) {
+            //加锁
+            synchronized (user) {
+                Integer blockedPoint = user.getBlockedMembershipPoint();
+                if (usedPoint <= blockedPoint) {
+                    //要取消冻结的积分值肯定小于或等于总的冻结积分值
+                    throw new RuntimeException("用户积分出现异常");
+                }
+                user.setBlockedMembershipPoint(blockedPoint-usedPoint);
+
+                //记录积分变更
+                PointRecord record = new PointRecord();
+                record.setActivityId(activityId);
+                record.setUserId(userId);
+                record.setCause((byte)1);//购物扣除积分
+
+                record.setStatus((byte) 3); //状态3表示已撤销
+                record.setUpdateDate(new Date());
+                userLocalCache.unfrozenUserPointById(userId, record);
+            }
+        }
+    }
+
+    /**
+     * 取消冻结优惠券
+     * @param order
+     * @param userId
+     */
+    private void unFrozenCoupon(SecOrderDto order, Long userId) {
+        //检查订单是否使用优惠券
+        if(!order.getCouponUsage()){
+            return;
+        }
+        User user = userLocalCache.selectUserById(userId);
+        Long fullrangeCouponId = order.getFullrangeCouponId();
+        Long couponId = order.getCouponId();
+        if (fullrangeCouponId > 0)
+            unfrozenCouponById(user, fullrangeCouponId, true);
+        if (couponId > 0)
+            unfrozenCouponById(user, couponId, false);
+    }
+
+    private void unfrozenCouponById(User user, Long couponId, boolean isFullrange) {
+        Long userId = user.getId();
+        synchronized (user) {
+            int i = couponLocalCache.unfrozenCouponById(couponId, userId);
+            if (i != 1) {
+                //TODO 回滚库存冻结和优惠券冻结
+                throw new RuntimeException(isFullrange ? "全品类优惠券取消冻结出现异常" : "指定品类优惠券取消冻结出现异常");
+            }
+        }
+    }
+
+    /**
+     * 取消冻结库存
+     * @param activityId
+     */
+    private void unBlockActivityStock(Long activityId) {
+        SecActivity secActivity = activitiesLocalCache.getSecActivityById(activityId);
+        synchronized (secActivity) {
+            //同步，进行库存校验
+            Integer seckillCount = secActivity.getSeckillCount();
+            Integer stockCount = secActivity.getSeckillStock();
+            if (seckillCount <= stockCount) {
+                //抛出异常，回滚。
+                throw new RuntimeException("库存出现异常");
+            }
+            // （公共数据）先在本地缓存中冻结库存，再批量提交到数据库
+            activitiesLocalCache.updateBlockedStockById(activityId, true);
+        }
     }
 
     /**
@@ -238,7 +301,7 @@ public class SecOrderServiceImpl implements SecOrderService {
      * @param seckillPrice
      * @return
      */
-    private ResultDTO<Long> getLongResultDTO(SubmitDTO submitDTO, SecOrderDto secOrderDto, BigDecimal seckillPrice) {
+    private ResultDTO<Long> saveAndReturnOrderId(SubmitDTO submitDTO, SecOrderDto secOrderDto, BigDecimal seckillPrice) {
         Long activityId = submitDTO.getActivityId();
         Long userId = submitDTO.getUserId();
 
@@ -312,7 +375,7 @@ public class SecOrderServiceImpl implements SecOrderService {
      * @param seckillPrice
      * @return
      */
-    private BigDecimal frozenCouponById(SubmitDTO submitDTO, SecOrderDto secOrderDto, BigDecimal seckillPrice) {
+    private BigDecimal frozenCoupon(SubmitDTO submitDTO, SecOrderDto secOrderDto, BigDecimal seckillPrice) {
         //TODO 同一个用户同时只能抢购一个商品，使用优惠券和积分要加用户锁。
         //TODO 对用户信息、订单信息进行缓存。
         Long activityId = submitDTO.getActivityId();
@@ -323,9 +386,9 @@ public class SecOrderServiceImpl implements SecOrderService {
         Long couponId = submitDTO.getCouponId();
         secOrderDto.setCouponUsage(false);
         if (fullrangeCouponId > 0)
-            seckillPrice = frozenCoupon(activityId, user, secOrderDto, seckillPrice, fullrangeCouponId, true);
+            seckillPrice = frozenCouponById(activityId, user, secOrderDto, seckillPrice, fullrangeCouponId, true);
         if (couponId > 0)
-            seckillPrice = frozenCoupon(activityId, user, secOrderDto, seckillPrice, couponId, false);
+            seckillPrice = frozenCouponById(activityId, user, secOrderDto, seckillPrice, couponId, false);
         return seckillPrice;
     }
 
@@ -340,7 +403,7 @@ public class SecOrderServiceImpl implements SecOrderService {
      * @param isFullrange  是否为全品类券
      * @return
      */
-    private BigDecimal frozenCoupon(Long activityId, User user, SecOrderDto secOrderDto, BigDecimal seckillPrice, Long couponId, boolean isFullrange) {
+    private BigDecimal frozenCouponById(Long activityId, User user, SecOrderDto secOrderDto, BigDecimal seckillPrice, Long couponId, boolean isFullrange) {
         Long userId = user.getId();
         CouponType couponType = couponLocalCache.selectCouponById(couponId);
         synchronized (user) {
@@ -380,7 +443,128 @@ public class SecOrderServiceImpl implements SecOrderService {
                 throw new RuntimeException("库存不足");
             }
             // （公共数据）先在本地缓存中冻结库存，再批量提交到数据库
-            activitiesLocalCache.updateBlockedStockById(activityId);
+            activitiesLocalCache.updateBlockedStockById(activityId, false);
         }
     }
+
+    /**
+     * 如果订单使用了用户积分，则扣除积分，并进行记录
+     *
+     * @param order
+     * @param activityId
+     * @param userId
+     */
+    private void deductUserPoint(SecOrderDto order, Long activityId, Long userId) {
+        if (order.getPointUsage()) {
+
+            Integer usedPoint = order.getUsedPoint();
+            User user = userLocalCache.selectUserById(userId);
+            Integer point = user.getMembershipPoint();
+            Integer blockedPoint = user.getBlockedMembershipPoint();
+            if (point >= blockedPoint & blockedPoint >= usedPoint) {
+                user.setMembershipPoint(point - usedPoint);
+                user.setBlockedMembershipPoint(blockedPoint - usedPoint);
+
+                //创建用户积分使用记录
+                PointRecord record = new PointRecord();
+                record.setActivityId(activityId);
+                record.setUserId(userId);
+                record.setCause((byte) 1);//购物扣除积分
+                record.setStatus((byte) 1);
+                record.setUpdateDate(new Date());
+
+                userLocalCache.deductUserPointById(userId, record);
+            } else {
+                throw new RuntimeException("用户积分不足");
+            }
+        }
+    }
+
+    /**
+     * 如果订单使用了优惠券，则扣除优惠券
+     *
+     * @param order
+     * @param userId
+     */
+    private void deductCoupons(SecOrderDto order, Long userId) {
+        if (order.getCouponUsage()) {
+            Long fullrangeCouponId = order.getFullrangeCouponId();
+            if (fullrangeCouponId > 0) {
+                int i = couponLocalCache.deductCouponById(fullrangeCouponId, userId);
+                if (i != 1) {
+                    throw new RuntimeException("全品类优惠券不存在");
+                }
+            }
+            Long couponId = order.getCouponId();
+            if (couponId > 0) {
+                int i = couponLocalCache.deductCouponById(couponId, userId);
+                if (i != 1) {
+                    throw new RuntimeException("单品优惠券不存在");
+                }
+            }
+        }
+    }
+
+    /**
+     * 扣除活动中的库存,对抢购活动加锁，以防止超卖;
+     * 如果所有商品订单都已支付，那么活动提前结束
+     *
+     * @param activityId
+     */
+    private void deductStockAndUpdateActivity(Long activityId) {
+        SecActivity secActivity = activitiesLocalCache.getSecActivityById(activityId);
+        synchronized (secActivity) {
+            Integer stockCount = secActivity.getSeckillStock();
+            Integer blockedStockCount = secActivity.getSeckillBlockedStock();
+            if (stockCount >= blockedStockCount & blockedStockCount > 0) {
+                // （公共数据）先在本地缓存中冻结库存，
+                secActivity.setSeckillStock(--stockCount);//扣减库存
+                secActivity.setSeckillBlockedStock(--blockedStockCount);//扣减冻结库存
+            } else {
+                throw new RuntimeException("商品库存出现异常");
+            }
+            //判断活动是否抢完
+            if (stockCount == 0) {
+                secActivity.setEndDate(new Date()); //记录活动的持续时间，便于分析数据
+            }
+            // 批量提交到数据库,考虑是否可以拿到同步范围外面
+            activitiesLocalCache.updateAfterPayOrder(activityId);
+        }
+    }
+
+    /**
+     * 支付并更新订单状态
+     *
+     * @param orderId
+     * @param order
+     */
+    private void payAndUpdateOrder(long orderId, SecOrderDto order) {
+        String orderAmount = order.getAmount().toString();//支付金额
+        //供支付渠道回调，更新订单支付状态。
+        //省略
+        System.out.println("支付金额：" + orderAmount);
+        order.setStatus((byte) 1);
+        order.setPayDate(new Date());
+        int num = orderLocalCache.updateOrderById(orderId);
+        if (num != 1) {
+            throw new RuntimeException("订单支付失败");
+        }
+    }
+
+    /**
+     * 检查订单状态，如果是待支付状态，
+     * 可以进行付款或取消订单操作
+     *
+     * @param orderId
+     * @return
+     */
+    private SecOrderDto getAndCheckOrder(long orderId) {
+        //检查订单状态
+        SecOrderDto order = orderLocalCache.getSecOrderDtoById(orderId);
+        if (order.getStatus() > 0) {
+            throw new RuntimeException("订单状态错误");
+        }
+        return order;
+    }
+
 }

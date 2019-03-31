@@ -39,5 +39,5 @@ public interface SecOrderService {
      * @param userId
      * @return
      */
-    ResultDTO cancletheOrder(long orderId, Long userId);
+    ResultDTO cancleOrder(long orderId, Long userId);
 }

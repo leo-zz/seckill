@@ -63,18 +63,41 @@ public class UserLocalCache {
      * @return
      */
     public int frozenUserPointById(Long userId, PointRecord record) {
-        User user = userMap.get(userId);
-        Integer blockedMembershipPoint = user.getBlockedMembershipPoint();
-        HashMap<String, Object> paraMap = new HashMap<>();
-        paraMap.put("userId", userId);
-        paraMap.put("blockedPoint", blockedMembershipPoint);
-        int i = userMapper.updateBlockedPointById(paraMap);
+        int i = updateBlockPoint(userId);
         int i1 = pointRecordMapper.insertSelective(record);
         if(i==i1&i==1){
             return 1;
         }else {
             return 0;
         }
+    }
+
+
+    /**
+     * 取消冻结用户的积分
+     * 取消冻结积分的同时，更新积分记录的状态为已撤销
+     *
+     * @param userId
+     * @param record
+     * @return
+     */
+    public int unfrozenUserPointById(Long userId, PointRecord record) {
+        int i = updateBlockPoint(userId);
+        int i1 = pointRecordMapper.updateUserPointStatusByEntity(record);
+        if(i==i1&i==1){
+            return 1;
+        }else {
+            return 0;
+        }
+    }
+
+    private int updateBlockPoint(Long userId) {
+        User user = userMap.get(userId);
+        Integer blockedMembershipPoint = user.getBlockedMembershipPoint();
+        HashMap<String, Object> paraMap = new HashMap<>();
+        paraMap.put("userId", userId);
+        paraMap.put("blockedPoint", blockedMembershipPoint);
+        return userMapper.updateBlockedPointById(paraMap);
     }
 
     public int deductUserPointById(Long userId, PointRecord record) {
@@ -86,7 +109,7 @@ public class UserLocalCache {
         paraMap.put("membershipPoint", membershipPoint);
         paraMap.put("blockedPoint", blockedMembershipPoint);
         int i = userMapper.updateBlockedPointById(paraMap);
-        int i1 = pointRecordMapper.deductUserPointByEntity(record);
+        int i1 = pointRecordMapper.updateUserPointStatusByEntity(record);
         if(i==i1&i==1){
             return 1;
         }else {

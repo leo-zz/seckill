@@ -149,8 +149,8 @@ public class ActivitiesLocalCache {
      */
     public Goods getGoodsByActivityId(Long id) {
         Goods goods = goodsMap.get(id);
-        if(goods==null){
-            goods=goodsMapper.selectByPrimaryKey(id);
+        if (goods == null) {
+            goods = goodsMapper.selectByPrimaryKey(id);
         }
         return goods;
     }
@@ -159,20 +159,22 @@ public class ActivitiesLocalCache {
      * 更新活动的冻结库存，每10次刷新到数据库
      * 先写入数据库，再写入缓存，确保数据不会丢失
      * 库存冻结的流程：活动创建后，即冻结对应数量的库存；等活动结束后，扣减实际售卖的库存。
+     *
      * @param activityId
+     * @param isSubmit 提交订单是为true，表示增加冻结库存；取消订单是为false，表示取消库存冻结
      */
-    public void updateBlockedStockById(Long activityId) {
+    public void updateBlockedStockById(Long activityId,boolean isSubmit) {
         SecActivity secActivity = secActivityMap.get(activityId);
         Integer blockedStockCount = secActivity.getSeckillBlockedStock();
-        secActivity.setSeckillBlockedStock(++blockedStockCount);//先加1后返回
-//TODO 屏蔽批量提交
-//        if(secActivity.getSeckillBlockedStock()%10==0){
-            secActivityMapper.updateBlockedStockByPrimaryKey(secActivity);
-//        }
+        secActivity.setSeckillBlockedStock(isSubmit?++blockedStockCount:--blockedStockCount);//先加1后返回
+        //TODO 屏蔽批量提交
+        //        if(secActivity.getSeckillBlockedStock()%10==0){
+        secActivityMapper.updateBlockedStockByPrimaryKey(secActivity);
+        //        }
     }
 
     public int updateAfterPayOrder(Long activityId) {
         SecActivity secActivity = secActivityMap.get(activityId);
-        return  secActivityMapper.updateByPrimaryKeySelective(secActivity);
+        return secActivityMapper.updateByPrimaryKeySelective(secActivity);
     }
 }

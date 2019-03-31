@@ -9,5 +9,5 @@ import com.leozz.entity.SecOrder;
 public interface WayBillService {
 
     //创建运单
-    boolean createWayBill(SecOrder order);
+    void createWayBill(SecOrder order);
 }

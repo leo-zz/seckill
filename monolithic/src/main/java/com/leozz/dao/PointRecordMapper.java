@@ -21,5 +21,5 @@ public interface PointRecordMapper {
 
     PointRecord selectRecordByMap(HashMap<String, Object> map);
 
-    int deductUserPointByEntity(PointRecord record);
+    int updateUserPointStatusByEntity(PointRecord record);
 }

@@ -123,7 +123,7 @@
       update_date = #{updateDate,jdbcType=TIMESTAMP}
     where id = #{id,jdbcType=BIGINT}
   </update>
-    <update id="deductUserPointByEntity" parameterType="com.leozz.entity.PointRecord">
+    <update id="updateUserPointStatusByEntity" parameterType="com.leozz.entity.PointRecord">
         update point_record
         set
         status = #{status,jdbcType=TINYINT},
