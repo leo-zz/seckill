@@ -1,8 +1,119 @@
-登录
+1、登录
 POST:http://localhost:8080/login
 参数信息
 	"id"= 7,
 	"password"= 123456
-登出
+成功回执：
+    {
+        "result": true,
+        "data": null,
+        "msg": "登录成功"
+    }
+2、登出
 GET:http://localhost:8080/logout
+成功回执：
+    {
+        "result": true,
+        "data": null,
+        "msg": "退出登录成功"
+    }
+3、获取活动列表
+GET:http://localhost:8080/activity/list
+成功回执：
+    {
+        "result": true,
+        "data": [
+            {
+                "goodsImg": "/img/game/study.jpg",
+                "goodsTitle": "经典重现",
+                "goodsPrice": 19.99,
+                "seckillPrice": 9.99,
+                "stockPercent": 100,
+                "buttonContent": "抢购中",
+                "clickable": true
+            },
+            {
+                "goodsImg": "/img/game/card.jpg",
+                "goodsTitle": "玩遍全球",
+                "goodsPrice": 39.99,
+                "seckillPrice": 19.99,
+                "stockPercent": 100,
+                "buttonContent": "抢购中",
+                "clickable": true
+            }
+        ],
+        "msg": "获取成功"
+    }
 
+4、参加活动/预下单
+POST:http://localhost:8080/activity/partake
+参数信息:
+    "secActivityId"=8
+{
+    "result": true,
+    "msg": "预下单成功",
+    "countDownTime": 9176979,
+    "stockPercent": 100,
+    "deliveryAddr": {
+        "id": 7,
+        "userId": 7,
+        "recipientName": "leo",
+        "recipientTel": "13849023586",
+        "recipientAddr": "科学大道100号",
+        "defualt": true
+    },
+    "coupons": [
+        {
+            "id": 8,
+            "category": 1,
+            "couponName": "满15元减3元限定品类券",
+            "usageLimit": 15,
+            "couponValue": 3,
+            "recordId": 8
+        },
+        {
+            "id": 7,
+            "category": 0,
+            "couponName": "满10元减1元全品类券",
+            "usageLimit": 10,
+            "couponValue": 1,
+            "recordId": 7
+        }
+    ],
+    "point": 0
+}
+
+5、提交订单
+POST:http://localhost:8080/order/submit
+请求头：
+    Content-Type="application/json";
+请求体：
+    {
+        "userId": 7,
+        "activityId": 8,
+        "deliveryAddrId": 7,
+        "orderChannel": 1,
+        "fullrangeCouponId": 7,
+        "couponTypeId": 8,
+        "usedPoint": 100,
+        "orderAmount": 19.9
+    }
+响应体：
+    {
+        "result": true,
+        "data": 11,
+        "msg": "订单创建成功"
+    }
+
+6、支付订单
+POST:http://localhost:8080/order/pay
+参数信息:
+    activityId=7
+响应体：
+    {
+        "result": true,
+        "data": null,
+        "msg": "订单支付成功"
+    }
+
+7、撤销订单

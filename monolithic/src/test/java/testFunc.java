@@ -25,7 +25,6 @@ public class testFunc {
     public void testInitial() {
         SecActivity secActivity = new SecActivity();
         secActivity.setId(123l);
-        secActivity.setStatus((byte) 1);
         System.out.println(secActivity);
     }
 
