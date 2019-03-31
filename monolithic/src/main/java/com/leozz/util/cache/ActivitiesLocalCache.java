@@ -116,31 +116,36 @@ public class ActivitiesLocalCache {
     //加锁，确保同时只能更新一次
     //每次刷新缓存都是重新覆盖，有无优化空间？
     private void updateCache(List<SecActivity> secActivityList) {
+        System.out.println("开始更新活动列表");
         synchronized (this) {
-            //问题1：每次刷新前都会清空，可能会导致其他地方出现空指针问题？
-            //secActivityMap.clear();
-            ConcurrentHashMap<Long, SecActivity> activityMapBack = new ConcurrentHashMap<>(secActivityList.size());
-            ConcurrentHashMap<Long, Goods> goodsMapBack = new ConcurrentHashMap<>(secActivityList.size());
-            secActivityList.forEach(secActivity -> {
-                Long id = secActivity.getId();
-                activityMapBack.put(id, secActivity);
-                Long goodsId = secActivity.getGoodsId();
-                //刷新商品信息
-                if (!goodsMapBack.containsKey(goodsId)) {
-                    if (goodsMap.containsKey(goodsId)) {
-                        goodsMapBack.put(id, goodsMap.get(id));
-                    } else {
-                        goodsMapBack.put(id, goodsMapper.selectByPrimaryKey(id));
+            try {
+                //问题1：每次刷新前都会清空，可能会导致其他地方出现空指针问题？
+                //secActivityMap.clear();
+                ConcurrentHashMap<Long, SecActivity> activityMapBack = new ConcurrentHashMap<>(secActivityList.size());
+                ConcurrentHashMap<Long, Goods> goodsMapBack = new ConcurrentHashMap<>(secActivityList.size());
+                secActivityList.forEach(secActivity -> {
+                    Long id = secActivity.getId();
+                    activityMapBack.put(id, secActivity);
+                    Long goodsId = secActivity.getGoodsId();
+                    //刷新商品信息
+                    if (!goodsMapBack.containsKey(goodsId)) {
+                        if (goodsMap.containsKey(goodsId)) {
+                            goodsMapBack.put(id, goodsMap.get(id));
+                        } else {
+                            goodsMapBack.put(id, goodsMapper.selectByPrimaryKey(id));
+                        }
                     }
-                }
 
-            });
-            //为解决问题1引入的策略：原始的secActivityMap需要GC回收，可能会增大GC压力
-            secActivityMap = activityMapBack;
-            goodsMap = goodsMapBack;
-            updatedFlag = true;
-            updateTimeStramp = System.currentTimeMillis();
+                });
+                //为解决问题1引入的策略：原始的secActivityMap需要GC回收，可能会增大GC压力
+                secActivityMap = activityMapBack;
+                goodsMap = goodsMapBack;
+            }finally {
+                updatedFlag = true;
+                updateTimeStramp = System.currentTimeMillis();
+            }
         }
+        System.out.println("活动列表更新完成");
     }
 
     /**
