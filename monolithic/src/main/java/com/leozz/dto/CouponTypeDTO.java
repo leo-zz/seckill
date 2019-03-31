@@ -1,12 +1,12 @@
 package com.leozz.dto;
 
-import com.leozz.entity.Coupon;
+import com.leozz.entity.CouponType;
 
 /**
  * @Author: leo-zz
  * @Date: 2019/3/25 11:05
  */
-public class CouponDTO extends  Coupon {
+public class CouponTypeDTO extends CouponType {
     private Long recordId;
 
     public Long getRecordId() {

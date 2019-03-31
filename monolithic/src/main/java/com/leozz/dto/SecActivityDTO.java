@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class SecActivityDTO {
 
+    private Long activityId;//活动编号
     private String goodsImg;//商品图片
     private String goodsTitle;//商品标题
     private double goodsPrice;//商品售价
@@ -17,6 +18,14 @@ public class SecActivityDTO {
     private byte stockPercent;//范围在0-100，选择byte类型节省空间
     private boolean isClickable;//是否可以抢购
     private String buttonContent;//按钮上的内容
+
+    public Long getActivityId() {
+        return activityId;
+    }
+
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
+    }
 
     public double getSeckillPrice() {
         return seckillPrice;

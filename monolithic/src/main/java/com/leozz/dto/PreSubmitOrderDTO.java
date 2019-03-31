@@ -1,6 +1,5 @@
 package com.leozz.dto;
 
-import com.leozz.entity.Coupon;
 import com.leozz.entity.DeliveryAddr;
 
 import java.util.List;
@@ -22,9 +21,9 @@ public class PreSubmitOrderDTO {
     private DeliveryAddr deliveryAddr;
 
     //优惠券信息
-    private List<CouponDTO> coupons;
-//    private Coupon fullrangeCoupon;//全品类券
-//    private Coupon coupon;//普通券
+    private List<CouponTypeDTO> coupons;
+//    private CouponType fullrangeCoupon;//全品类券
+//    private CouponType coupon;//普通券
 
     //积分信息
     private int point;
@@ -78,11 +77,11 @@ public class PreSubmitOrderDTO {
         this.deliveryAddr = deliveryAddr;
     }
 
-    public List<CouponDTO> getCoupons() {
+    public List<CouponTypeDTO> getCoupons() {
         return coupons;
     }
 
-    public void setCoupons(List<CouponDTO> coupons) {
+    public void setCoupons(List<CouponTypeDTO> coupons) {
         this.coupons = coupons;
     }
 
