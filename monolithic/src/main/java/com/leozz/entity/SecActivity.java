@@ -10,8 +10,6 @@ public class SecActivity {
 
     private BigDecimal seckillPrice;
 
-    private Integer stockPercent;
-
     private Integer seckillCount;
 
     private Integer seckillStock;
@@ -21,8 +19,6 @@ public class SecActivity {
     private Date startDate;
 
     private Date endDate;
-
-    private Byte status;
 
     public Long getId() {
         return id;
@@ -46,14 +42,6 @@ public class SecActivity {
 
     public void setSeckillPrice(BigDecimal seckillPrice) {
         this.seckillPrice = seckillPrice;
-    }
-
-    public Integer getStockPercent() {
-        return stockPercent;
-    }
-
-    public void setStockPercent(Integer stockPercent) {
-        this.stockPercent = stockPercent;
     }
 
     public Integer getSeckillCount() {
@@ -96,27 +84,17 @@ public class SecActivity {
         this.endDate = endDate;
     }
 
-    public Byte getStatus() {
-        return status;
-    }
-
-    public void setStatus(Byte status) {
-        this.status = status;
-    }
-
     @Override
     public String toString() {
         return "SecActivity{" +
                 "id=" + id +
                 ", goodsId=" + goodsId +
                 ", seckillPrice=" + seckillPrice +
-                ", stockPercent=" + stockPercent +
                 ", seckillCount=" + seckillCount +
                 ", seckillStock=" + seckillStock +
                 ", seckillBlockedStock=" + seckillBlockedStock +
                 ", startDate=" + startDate +
                 ", endDate=" + endDate +
-                ", status=" + status +
                 '}';
     }
 }

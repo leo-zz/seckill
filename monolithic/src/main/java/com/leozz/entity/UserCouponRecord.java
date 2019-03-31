@@ -5,13 +5,13 @@ import java.util.Date;
 public class UserCouponRecord {
     private Long id;
 
-    private Long couponId;
+    private Long couponTypeId;
 
     private Long userId;
 
     private Byte status;
 
-    private Long orderId;
+    private Long activityId;
 
     private Date usageDate;
 
@@ -25,12 +25,12 @@ public class UserCouponRecord {
         this.id = id;
     }
 
-    public Long getCouponId() {
-        return couponId;
+    public Long getCouponTypeId() {
+        return couponTypeId;
     }
 
-    public void setCouponId(Long couponId) {
-        this.couponId = couponId;
+    public void setCouponTypeId(Long couponTypeId) {
+        this.couponTypeId = couponTypeId;
     }
 
     public Long getUserId() {
@@ -49,12 +49,12 @@ public class UserCouponRecord {
         this.status = status;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public Long getActivityId() {
+        return activityId;
     }
 
-    public void setOrderId(Long orderId) {
-        this.orderId = orderId;
+    public void setActivityId(Long activityId) {
+        this.activityId = activityId;
     }
 
     public Date getUsageDate() {

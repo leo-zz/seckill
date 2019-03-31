@@ -2,10 +2,10 @@ package com.leozz.entity;
 
 import java.math.BigDecimal;
 
-public class Coupon {
+public class CouponType {
     private Long id;
 
-    private Byte type;
+    private Byte category;
 
     private String couponName;
 
@@ -21,12 +21,12 @@ public class Coupon {
         this.id = id;
     }
 
-    public Byte getType() {
-        return type;
+    public Byte getCategory() {
+        return category;
     }
 
-    public void setType(Byte type) {
-        this.type = type;
+    public void setCategory(Byte category) {
+        this.category = category;
     }
 
     public String getCouponName() {
