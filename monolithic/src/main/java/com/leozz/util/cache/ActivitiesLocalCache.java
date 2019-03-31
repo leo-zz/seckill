@@ -144,36 +144,32 @@ public class ActivitiesLocalCache {
         }
     }
 
-    @Transactional
-    public int updateStatusById(Long secActivityId, byte i) {
-        secActivityMap.get(secActivityId).setStatus(i);
-        //先写入缓存再存入数据库，顺序对吗？
-        SecActivity secActivity = new SecActivity();
-        secActivity.setId(secActivityId);
-        secActivity.setStatus(i);
-        //未赋值的属性为null
-        return secActivityMapper.updateByPrimaryKeySelective(secActivity);
-    }
-
     /**
-     * 秒杀活动中都是先拿到活动列表，才会拿取商品，因此不考虑goodsMap=null的情况。
+     * 秒杀活动中都是先拿到活动列表，才会拿取商品，
+     * 在创建活动列表时，会创建商品集合，因此不考虑goodsMap=null的情况。
      */
     public Goods getGoodsByActivityId(Long id) {
-        return goodsMap.get(id);
+        Goods goods = goodsMap.get(id);
+        if(goods==null){
+            goods=goodsMapper.selectByPrimaryKey(id);
+        }
+        return goods;
     }
 
     /**
      * 更新活动的冻结库存，每10次刷新到数据库
-     *
+     * 先写入数据库，再写入缓存，确保数据不会丢失
+     * 库存冻结的流程：活动创建后，即冻结对应数量的库存；等活动结束后，扣减实际售卖的库存。
      * @param activityId
      */
     public void updateBlockedStockById(Long activityId) {
         SecActivity secActivity = secActivityMap.get(activityId);
         Integer blockedStockCount = secActivity.getSeckillBlockedStock();
         secActivity.setSeckillBlockedStock(++blockedStockCount);//先加1后返回
-        if(secActivity.getSeckillBlockedStock()%10==0){
+//TODO 屏蔽批量提交
+//        if(secActivity.getSeckillBlockedStock()%10==0){
             secActivityMapper.updateBlockedStockByPrimaryKey(secActivity);
-        }
+//        }
     }
 
     public int updateAfterPayOrder(Long activityId) {

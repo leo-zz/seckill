@@ -89,16 +89,23 @@ public class OrderLocalCache {
         if (secOrderDto == null) {
             //查找订单信息
             SecOrder secOrder = orderMapper.selectByPrimaryKey(orderId);
+            if(secOrder==null){
+                throw new RuntimeException("订单号不存在");
+            }
             secOrderDto = new SecOrderDto(secOrder);
             //查找优惠券
+            Long activityId = secOrder.getActivityId();
+            Long userId = secOrder.getUserId();
+            HashMap<String, Object> paraMap = new HashMap<>();
+            paraMap.put("activityId",activityId);
+            paraMap.put("userId",userId);
             if (secOrder.getCouponUsage()) {
-                List<UserCouponRecord> records = userCouponRecordMapper.selectRecordsByOrderId(secOrder.getId());
-
+                List<UserCouponRecord> records = userCouponRecordMapper.selectRecordsByActivityId(paraMap);
                 for (UserCouponRecord record : records) {
-                    Long couponId = record.getCouponId();
+                    Long couponId = record.getCouponTypeId();
                     Long id = record.getId();   //保存用户使用的优惠券的信息
-                    Coupon coupon = couponLocalCache.selectCouponById(couponId);
-                    switch (coupon.getType()) {
+                    CouponType couponType = couponLocalCache.selectCouponById(couponId);
+                    switch (couponType.getCategory()) {
                         case 0:
                             secOrderDto.setFullrangeCouponId(id);
                             break;
@@ -110,7 +117,11 @@ public class OrderLocalCache {
             }
             //查找积分信息
             if (secOrder.getPointUsage()) {
-                PointRecord record = pointRecordMapper.selectRecordByOrderId(secOrder.getId());
+                paraMap.put("cause",1);
+                PointRecord record = pointRecordMapper.selectRecordByMap(paraMap);
+                if(record==null){
+                    throw new RuntimeException("用户积分使用出现异常");
+                }
                 secOrderDto.setUsedPoint(record.getUpdateAmount());
             }
             orderMap.put(orderId,secOrderDto);

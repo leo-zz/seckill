@@ -18,6 +18,8 @@ public class FlowLimiter {
     @Autowired
     ActivitiesLocalCache activitiesLocalCache;
 
+    private final Integer limit_mulitple=2;
+
     private  Map<Long,Semaphore> limiter=new ConcurrentHashMap<>();
 
     //为指定的活动添加限流器
@@ -30,7 +32,14 @@ public class FlowLimiter {
             //TODO 要考虑加锁的情况，防止并发创建限流器。
             SecActivity secActivity = activitiesLocalCache.getSecActivityById(secActivityId);
             synchronized (secActivity){
-                return new Semaphore(seckillCount * 1);
+                //加锁后重新检测是否已经创建限流器
+                if(limiter.containsKey(secActivityId))
+                    return limiter.get(secActivityId);
+                else {
+                    Semaphore semaphore = new Semaphore(seckillCount * limit_mulitple);
+                    limiter.put(secActivityId,semaphore);
+                    return semaphore;
+                }
             }
         }
     }
