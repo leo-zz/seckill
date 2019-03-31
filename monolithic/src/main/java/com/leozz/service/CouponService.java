@@ -1,6 +1,6 @@
 package com.leozz.service;
 
-import com.leozz.entity.Coupon;
+import com.leozz.entity.CouponType;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface CouponService {
      * @param userId 用户Id
      * @return 可用的优惠券列表
      */
-    List<Coupon>  getAvaliableCouponList(Long secActivityId,Long userId);
+    List<CouponType>  getAvaliableCouponList(Long secActivityId, Long userId);
 
     //领取优惠券
 

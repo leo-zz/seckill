@@ -23,7 +23,7 @@ public interface SecOrderService {
      * @param submitDTO 订单信息，包含秒杀活动、商品、用户、支付方式、收件人信息等信息。
      * @return  创建后的订单号，如果返回-1，表示订单提交失败。
      */
-    ResultDTO submitOrder(SubmitDTO submitDTO);
+    ResultDTO<Long> submitOrder(SubmitDTO submitDTO);
 
     /**
      *  支付订单的流程：扣减冻结库存（），使用冻结优惠券，扣减冻结积分，更新订单支付信息
@@ -33,5 +33,11 @@ public interface SecOrderService {
      */
     ResultDTO paytheOrder(long orderId,Long userId1);
 
-
+    /**
+     * 取消订单，包括手动取消和定时任务取消
+     * @param orderId
+     * @param userId
+     * @return
+     */
+    ResultDTO cancletheOrder(long orderId, Long userId);
 }

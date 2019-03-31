@@ -25,7 +25,7 @@ public interface SecActivityService {
      * @return  秒杀活动列表
      */
 
-    List<SecActivityDTO> getSecActivityList(Long userId);
+    ResultDTO<List<SecActivityDTO>> getSecActivityList(Long userId);
 
     /**
      *  点击抢购按钮后触发的逻辑，重新检查秒杀活动的状态、库存，以及当前用户是否参与过此活动{@link SecActivityService#partakeSecActivity(java.lang.Long, java.lang.Long)}；
