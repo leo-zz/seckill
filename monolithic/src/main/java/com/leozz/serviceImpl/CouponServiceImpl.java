@@ -1,6 +1,6 @@
 package com.leozz.serviceImpl;
 
-import com.leozz.entity.Coupon;
+import com.leozz.entity.CouponType;
 import com.leozz.service.CouponService;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public class CouponServiceImpl implements CouponService {
     @Override
-    public List<Coupon> getAvaliableCouponList(Long secActivityId, Long userId) {
+    public List<CouponType> getAvaliableCouponList(Long secActivityId, Long userId) {
         return null;
     }
 
