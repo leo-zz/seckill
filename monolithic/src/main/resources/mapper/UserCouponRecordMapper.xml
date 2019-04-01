@@ -20,8 +20,8 @@
         where id = #{id,jdbcType=BIGINT}
     </select>
 
-    <select id="checkCouponIsUsable" parameterType="java.util.Map" resultType="java.lang.Integer">
-    select count(id)
+    <select id="checkCouponIsUsableAndReturnCouponTypeId" parameterType="java.util.Map" resultType="java.lang.Long">
+    select coupon_type_id
     from user_coupon_record
     where id = #{recordId,jdbcType=BIGINT}
     and user_id = #{userId,jdbcType=BIGINT}
