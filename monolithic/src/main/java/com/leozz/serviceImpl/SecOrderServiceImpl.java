@@ -150,7 +150,7 @@ public class SecOrderServiceImpl implements SecOrderService {
         deductStockAndUpdateActivity(activityId);
 
         //4.扣除优惠券
-        deductCoupons(order, userId);
+        deductCoupons(order);
 
         //5.扣除积分
         deductUserPoint(order, activityId, userId);
@@ -225,7 +225,8 @@ public class SecOrderServiceImpl implements SecOrderService {
             //加锁
             synchronized (user) {
                 Integer blockedPoint = user.getBlockedMembershipPoint();
-                if (usedPoint <= blockedPoint) {
+                //如果用户订单中使用的积分大于冻结积分，则表示出现问题。
+                if (usedPoint > blockedPoint) {
                     //要取消冻结的积分值肯定小于或等于总的冻结积分值
                     throw new RuntimeException("用户积分出现异常");
                 }
@@ -264,9 +265,8 @@ public class SecOrderServiceImpl implements SecOrderService {
     }
 
     private void unfrozenCouponById(User user, Long couponId, boolean isFullrange) {
-        Long userId = user.getId();
         synchronized (user) {
-            long i = couponLocalCache.unfrozenCouponById(couponId, userId);
+            long i = couponLocalCache.unfrozenCouponById(couponId);
             if (i != 1) {
                 //TODO 回滚库存冻结和优惠券冻结
                 throw new RuntimeException(isFullrange ? "全品类优惠券取消冻结出现异常" : "指定品类优惠券取消冻结出现异常");
@@ -284,7 +284,8 @@ public class SecOrderServiceImpl implements SecOrderService {
             //同步，进行库存校验
             Integer seckillCount = secActivity.getSeckillCount();
             Integer stockCount = secActivity.getSeckillStock();
-            if (seckillCount <= stockCount) {
+            //总售卖数量小于库存数量时，表示系统出错。
+            if (seckillCount < stockCount) {
                 //抛出异常，回滚。
                 throw new RuntimeException("库存出现异常");
             }
@@ -486,20 +487,19 @@ public class SecOrderServiceImpl implements SecOrderService {
      * 如果订单使用了优惠券，则扣除优惠券
      *
      * @param order
-     * @param userId
      */
-    private void deductCoupons(SecOrderDto order, Long userId) {
+    private void deductCoupons(SecOrderDto order) {
         if (order.getCouponUsage()) {
             Long fullrangeCouponId = order.getFullrangeCouponId();
             if (fullrangeCouponId > 0) {
-                long i = couponLocalCache.deductCouponById(fullrangeCouponId, userId);
+                long i = couponLocalCache.deductCouponById(fullrangeCouponId);
                 if (i != 1) {
                     throw new RuntimeException("全品类优惠券不存在");
                 }
             }
             Long couponId = order.getCouponId();
             if (couponId > 0) {
-                long i = couponLocalCache.deductCouponById(couponId, userId);
+                long i = couponLocalCache.deductCouponById(couponId);
                 if (i != 1) {
                     throw new RuntimeException("单品优惠券不存在");
                 }

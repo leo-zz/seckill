@@ -52,36 +52,44 @@ public class CouponLocalCache {
      *
      * @param recordId
      * @param userId
-     * @return
+     * @return 返回冻结优惠券的类型
      */
     public long frozenCouponById(Long recordId, Long userId, Long activityId) {
-        return checkAndUpdateCouponById(recordId, userId, activityId, 1);
-
+        long couponTypeId = -1;
+        //冻结优惠券-先检查当前用户是否有对应优惠券
+        HashMap<String, Long> paraMap1 = new HashMap<>();
+        paraMap1.put("userId", userId);
+        paraMap1.put("recordId", recordId);
+        couponTypeId = userCouponRecordMapper.checkCouponIsUsableAndReturnCouponTypeId(paraMap1);
+        if (couponTypeId <= 0) {
+            return -1;
+        }
+        //冻结优惠券
+        HashMap<String, Object> paraMap2 = new HashMap<>();
+        paraMap2.put("recordId", recordId);
+        paraMap2.put("activityId", activityId);
+        paraMap2.put("status", 1);
+        int i = userCouponRecordMapper.updateStatusById(paraMap2);
+        return i == 1 ? couponTypeId : i;
     }
 
-    private long checkAndUpdateCouponById(Long recordId, Long userId, Long activityId, int status) {
-        //判断是冻结优惠券还是使用优惠券
-        long couponTypeId =-1;
-        if (activityId > 0) {
-            //冻结优惠券-先检查当前用户是否有对应优惠券
-            HashMap<String, Long> paraMap1 = new HashMap<>();
-            paraMap1.put("userId", userId);
-            paraMap1.put("recordId", recordId);
-            couponTypeId = userCouponRecordMapper.checkCouponIsUsableAndReturnCouponTypeId(paraMap1);
-            if (couponTypeId <= 0) {
-                return -1;
-            }
-        }
+    /**
+     * 用于支持冻结优惠券（传入activityId，status为1）、使用优惠券(不入activityId，status为2)
+     * 和取消冻结优惠券(不入activityId，status为3)的操作。
+     *
+     * @param recordId
+     * @param status
+     * @return
+     */
+    private long updateCouponById(Long recordId, int status) {
+
         HashMap<String, Object> paraMap2 = new HashMap<>();
         paraMap2.put("recordId", recordId);
         paraMap2.put("status", status);
-        if (activityId > 0) {
-            paraMap2.put("activityId", activityId);
-            int i = userCouponRecordMapper.updateStatusById(paraMap2);
-            return i==1?couponTypeId:i;
-        } else {
-            return userCouponRecordMapper.updateStatusById(paraMap2);
+        if (status == 0) {
+            paraMap2.put("activityId", "");
         }
+        return userCouponRecordMapper.updateStatusById(paraMap2);
     }
 
 
@@ -108,21 +116,19 @@ public class CouponLocalCache {
      * 使用优惠券
      *
      * @param recordId
-     * @param userId
      * @return
      */
-    public long deductCouponById(Long recordId, Long userId) {
-        return checkAndUpdateCouponById(recordId, userId, 0l, 2);
+    public long deductCouponById(Long recordId) {
+        return updateCouponById(recordId, 2);
     }
 
     /**
-     * 取消冻结优惠券
+     * 取消冻结优惠券，优惠券的状态更新为0，activityId置为空；
      *
      * @param couponId
-     * @param userId
      * @return
      */
-    public long unfrozenCouponById(Long couponId, Long userId) {
-        return checkAndUpdateCouponById(couponId, userId, 0l, 0);
+    public long unfrozenCouponById(Long couponId) {
+        return updateCouponById(couponId, 0);
     }
 }
