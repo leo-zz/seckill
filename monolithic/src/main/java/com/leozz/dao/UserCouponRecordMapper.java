@@ -35,5 +35,5 @@ public interface UserCouponRecordMapper {
      * @param paraMap
      * @return 可用则返回1，否则返回0
      */
-    int checkCouponIsUsable(HashMap<String, Long> paraMap);
+    long checkCouponIsUsableAndReturnCouponTypeId(HashMap<String, Long> paraMap);
 }

@@ -47,28 +47,29 @@ public class CouponLocalCache {
     }
 
     /**
-     * 冻结优惠券，拿到用户锁后进行
+     * 冻结优惠券，拿到用户锁后进行,先检查优惠券是否可用，然后再修改优惠券状态
      * 缓存中暂不维护用户拥有的优惠券信息
      *
      * @param recordId
      * @param userId
      * @return
      */
-    public int frozenCouponById(Long recordId, Long userId, Long activityId) {
+    public long frozenCouponById(Long recordId, Long userId, Long activityId) {
         return checkAndUpdateCouponById(recordId, userId, activityId, 1);
 
     }
 
-    private int checkAndUpdateCouponById(Long recordId, Long userId, Long activityId, int status) {
+    private long checkAndUpdateCouponById(Long recordId, Long userId, Long activityId, int status) {
         //判断是冻结优惠券还是使用优惠券
+        long couponTypeId =-1;
         if (activityId > 0) {
             //冻结优惠券-先检查当前用户是否有对应优惠券
             HashMap<String, Long> paraMap1 = new HashMap<>();
             paraMap1.put("userId", userId);
             paraMap1.put("recordId", recordId);
-            int count = userCouponRecordMapper.checkCouponIsUsable(paraMap1);
-            if (count <= 0) {
-                return count;
+            couponTypeId = userCouponRecordMapper.checkCouponIsUsableAndReturnCouponTypeId(paraMap1);
+            if (couponTypeId <= 0) {
+                return -1;
             }
         }
         HashMap<String, Object> paraMap2 = new HashMap<>();
@@ -76,18 +77,24 @@ public class CouponLocalCache {
         paraMap2.put("status", status);
         if (activityId > 0) {
             paraMap2.put("activityId", activityId);
+            int i = userCouponRecordMapper.updateStatusById(paraMap2);
+            return i==1?couponTypeId:i;
+        } else {
+            return userCouponRecordMapper.updateStatusById(paraMap2);
         }
-        return userCouponRecordMapper.updateStatusById(paraMap2);
     }
 
 
     /**
+     * 先根据优惠券的ID，拿到优惠券类型的ID，再通过缓存查询优惠券类型信息
      * 先使用缓存，如果没有再从数据库中查询。
      *
      * @param couponId
      * @return
      */
     public CouponType selectCouponById(Long couponId) {
+        userCouponRecordMapper.selectByPrimaryKey(couponId);
+
         CouponType couponType = couponMap.get(couponId);
         if (couponType == null) {
             couponType = couponMapper.selectByPrimaryKey(couponId);
@@ -104,17 +111,18 @@ public class CouponLocalCache {
      * @param userId
      * @return
      */
-    public int deductCouponById(Long recordId, Long userId) {
+    public long deductCouponById(Long recordId, Long userId) {
         return checkAndUpdateCouponById(recordId, userId, 0l, 2);
     }
 
     /**
      * 取消冻结优惠券
+     *
      * @param couponId
      * @param userId
      * @return
      */
-    public int unfrozenCouponById(Long couponId, Long userId) {
+    public long unfrozenCouponById(Long couponId, Long userId) {
         return checkAndUpdateCouponById(couponId, userId, 0l, 0);
     }
 }

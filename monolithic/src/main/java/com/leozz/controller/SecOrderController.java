@@ -77,9 +77,6 @@ public class SecOrderController {
         }catch (Exception e){
             return  new ResultDTO(false,e.getMessage());
         }
-
-
-
     }
 
 }

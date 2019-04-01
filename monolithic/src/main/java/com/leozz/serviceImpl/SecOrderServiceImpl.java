@@ -266,7 +266,7 @@ public class SecOrderServiceImpl implements SecOrderService {
     private void unfrozenCouponById(User user, Long couponId, boolean isFullrange) {
         Long userId = user.getId();
         synchronized (user) {
-            int i = couponLocalCache.unfrozenCouponById(couponId, userId);
+            long i = couponLocalCache.unfrozenCouponById(couponId, userId);
             if (i != 1) {
                 //TODO 回滚库存冻结和优惠券冻结
                 throw new RuntimeException(isFullrange ? "全品类优惠券取消冻结出现异常" : "指定品类优惠券取消冻结出现异常");
@@ -381,7 +381,7 @@ public class SecOrderServiceImpl implements SecOrderService {
         Long activityId = submitDTO.getActivityId();
         Long userId = submitDTO.getUserId();
         User user = userLocalCache.selectUserById(userId);
-
+        //拿到优惠券的ID
         Long fullrangeCouponId = submitDTO.getFullrangeCouponId();
         Long couponId = submitDTO.getCouponId();
         secOrderDto.setCouponUsage(false);
@@ -405,10 +405,10 @@ public class SecOrderServiceImpl implements SecOrderService {
      */
     private BigDecimal frozenCouponById(Long activityId, User user, SecOrderDto secOrderDto, BigDecimal seckillPrice, Long couponId, boolean isFullrange) {
         Long userId = user.getId();
-        CouponType couponType = couponLocalCache.selectCouponById(couponId);
+        Long couponTypeId;
         synchronized (user) {
-            int i = couponLocalCache.frozenCouponById(couponId, userId, activityId);
-            if (i != 1) {
+            couponTypeId = couponLocalCache.frozenCouponById(couponId, userId, activityId);
+            if (couponTypeId < 1) {
                 //TODO 回滚库存冻结和优惠券冻结
                 throw new RuntimeException(isFullrange ? "全品类优惠券不可用" : "指定品类优惠券不可用");
             }
@@ -418,6 +418,8 @@ public class SecOrderServiceImpl implements SecOrderService {
         } else {
             secOrderDto.setCouponId(couponId);
         }
+        //根据优惠券的ID，拿到优惠券类型的信息
+        CouponType couponType = couponLocalCache.selectCouponById(couponTypeId);
         //达到优惠券使用标准，扣减订单价格
         if (seckillPrice.doubleValue() > couponType.getUsageLimit().doubleValue()) {
             //divide是除法，subtract是减法
@@ -490,14 +492,14 @@ public class SecOrderServiceImpl implements SecOrderService {
         if (order.getCouponUsage()) {
             Long fullrangeCouponId = order.getFullrangeCouponId();
             if (fullrangeCouponId > 0) {
-                int i = couponLocalCache.deductCouponById(fullrangeCouponId, userId);
+                long i = couponLocalCache.deductCouponById(fullrangeCouponId, userId);
                 if (i != 1) {
                     throw new RuntimeException("全品类优惠券不存在");
                 }
             }
             Long couponId = order.getCouponId();
             if (couponId > 0) {
-                int i = couponLocalCache.deductCouponById(couponId, userId);
+                long i = couponLocalCache.deductCouponById(couponId, userId);
                 if (i != 1) {
                     throw new RuntimeException("单品优惠券不存在");
                 }
