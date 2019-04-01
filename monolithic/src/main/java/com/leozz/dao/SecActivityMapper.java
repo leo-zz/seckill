@@ -20,7 +20,7 @@ public interface SecActivityMapper {
     int updateByPrimaryKey(SecActivity record);
 
     /**
-     *  获取当前最近进行的活动列表，筛选范围为活动开始前30分钟，到活动截止时间。
+     *  获取当前最近进行的活动列表，筛选范围为活动开始前30分钟，到活动截止时间后60分钟。
      * @return
      */
     List<SecActivity> selectRecentActivityList();

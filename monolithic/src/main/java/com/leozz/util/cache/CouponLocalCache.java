@@ -87,7 +87,7 @@ public class CouponLocalCache {
         paraMap2.put("recordId", recordId);
         paraMap2.put("status", status);
         if (status == 0) {
-            paraMap2.put("activityId", "");
+            paraMap2.put("activityId", 0);
         }
         return userCouponRecordMapper.updateStatusById(paraMap2);
     }

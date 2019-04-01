@@ -25,7 +25,9 @@
     select
     <include refid="Base_Column_List" />
     from seckill_activity sa
-    where <![CDATA[ now()< sa.end_date ]]>
+    <!--  结束时间后60分钟  -->
+    where <![CDATA[ TimeStampDiff(MINUTE,sa.end_date,now())< 60 ]]>
+    <!--  开始时间前30分钟  -->
     and <![CDATA[ TimeStampDiff(MINUTE,now(),sa.start_date)< 30 ]]>
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
